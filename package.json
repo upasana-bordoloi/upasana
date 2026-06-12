@@ -1,0 +1,20 @@
+{
+  "name": "artist-ecommerce-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "workers/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:api": "npm run dev --workspace=workers/api",
+    "build:web": "npm run build --workspace=apps/web",
+    "build:api": "npm run build --workspace=workers/api",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "^2.0.0"
+  }
+}

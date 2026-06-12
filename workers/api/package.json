@@ -1,0 +1,14 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "type": "module",
+  "dependencies": {
+    "hono": "^4.0.0",
+    "schemas": "file:../../packages/schemas",
+    "utils": "file:../../packages/utils"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
