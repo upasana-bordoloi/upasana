@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-node_modeule/
 
 # Environment Variables
 .env
@@ -31,7 +30,6 @@ dist/
 build/
 out/
 .next/
-.cache/
 
 # Temporary Files
 tmp/
@@ -49,11 +47,6 @@ Thumbs.db
 *.swo
 *.sublime-project
 *.sublime-workspace
-
-# Package Manager
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
 
 # Testing
 jest-html-reporters-*.html
