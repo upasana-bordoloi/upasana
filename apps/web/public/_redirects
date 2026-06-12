@@ -1,4 +1,4 @@
 # Redirect rule to transparently proxy API requests to the Cloudflare Worker API.
 # Replace CHANGEME with your actual Cloudflare Workers subdomain (e.g. username).
 # If you use a custom domain for the Worker API, replace the entire target URL with your custom domain.
-/api/* https://gallery-api.CHANGEME.workers.dev/api/:splat 200
+/api/* https://gallery-api.jooart96.workers.dev/api/:splat 200
