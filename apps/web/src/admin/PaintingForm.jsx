@@ -23,6 +23,7 @@ import {
   Grid2,
   Paper,
   IconButton,
+  Divider,
 } from '@mui/material';
 import { CloseOutlined, ImageOutlined, ArrowBackOutlined } from '@mui/icons-material';
 
@@ -30,8 +31,10 @@ export default function PaintingForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [mediaTarget, setMediaTarget] = useState(null); // 'image_url' or 'thumbnail_url'
+  const [mediaTarget, setMediaTarget] = useState(null); // 'image_url', 'thumbnail_url', or 'additional'
   const [mediaList, setMediaList] = useState([]);
+  const [additionalUrls, setAdditionalUrls] = useState([]);
+  const [newAdditionalUrl, setNewAdditionalUrl] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
   const isEdit = !!id;
@@ -69,6 +72,7 @@ export default function PaintingForm() {
       availability: 'AVAILABLE',
       image_url: '',
       thumbnail_url: '',
+      additional_images: '[]',
       seo_title: '',
       seo_description: '',
     },
@@ -79,6 +83,14 @@ export default function PaintingForm() {
   // Load details into fields if editing
   useEffect(() => {
     if (isEdit && editingPainting) {
+      let parsed = [];
+      try {
+        parsed = JSON.parse(editingPainting.additional_images || '[]');
+      } catch (e) {
+        parsed = [];
+      }
+      setAdditionalUrls(parsed);
+
       reset({
         ...editingPainting,
         featured: editingPainting.featured === 1 || editingPainting.featured === true,
@@ -108,10 +120,24 @@ export default function PaintingForm() {
       .catch(console.error);
   };
 
+  const handleAddAdditionalUrl = (url) => {
+    if (url && !additionalUrls.includes(url)) {
+      setAdditionalUrls([...additionalUrls, url]);
+    }
+  };
+
+  const handleRemoveAdditionalUrl = (index) => {
+    setAdditionalUrls(additionalUrls.filter((_, i) => i !== index));
+  };
+
   const handleSelectMedia = (url) => {
-    setValue(mediaTarget, url);
     if (mediaTarget === 'image_url') {
+      setValue('image_url', url);
       setValue('og_image', url);
+    } else if (mediaTarget === 'thumbnail_url') {
+      setValue('thumbnail_url', url);
+    } else if (mediaTarget === 'additional') {
+      handleAddAdditionalUrl(url);
     }
     setMediaTarget(null);
   };
@@ -143,7 +169,11 @@ export default function PaintingForm() {
 
   const onSubmit = (data) => {
     setErrorMsg('');
-    mutation.mutate(data);
+    const payload = {
+      ...data,
+      additional_images: JSON.stringify(additionalUrls),
+    };
+    mutation.mutate(payload);
   };
 
   return (
@@ -302,11 +332,11 @@ export default function PaintingForm() {
                   <Grid item xs={12}>
                     <Divider sx={{ my: 2 }} />
                     <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>Artwork Images</Typography>
-                    
+
                     <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                       <TextField
                         fullWidth
-                        label="Full Image URL"
+                        label="Primary Image URL"
                         {...register('image_url')}
                         error={!!errors.image_url}
                       />
@@ -315,7 +345,7 @@ export default function PaintingForm() {
                       </Button>
                     </Box>
 
-                    <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                       <TextField
                         fullWidth
                         label="Thumbnail Image URL"
@@ -325,6 +355,58 @@ export default function PaintingForm() {
                       <Button variant="outlined" onClick={() => openMediaLibrary('thumbnail_url')} sx={{ minWidth: 48, p: 0 }}>
                         <ImageOutlined />
                       </Button>
+                    </Box>
+
+                    {/* Additional Images Section */}
+                    <Box sx={{ mb: 1 }}>
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', display: 'block', mb: 1 }}>
+                        Additional Images (Multi-Image Display)
+                      </Typography>
+
+                      {additionalUrls.map((url, index) => (
+                        <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              flexGrow: 1,
+                              p: 1,
+                              border: '1px solid #EBE6DF',
+                              backgroundColor: '#FAF8F5',
+                              textOverflow: 'ellipsis',
+                              overflow: 'hidden',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            {url}
+                          </Typography>
+                          <Button size="small" color="error" onClick={() => handleRemoveAdditionalUrl(index)}>
+                            Remove
+                          </Button>
+                        </Box>
+                      ))}
+
+                      <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+                        <TextField
+                          fullWidth
+                          label="Add Image URL"
+                          size="small"
+                          value={newAdditionalUrl}
+                          onChange={(e) => setNewAdditionalUrl(e.target.value)}
+                        />
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => {
+                            handleAddAdditionalUrl(newAdditionalUrl);
+                            setNewAdditionalUrl('');
+                          }}
+                        >
+                          Add
+                        </Button>
+                        <Button variant="outlined" size="small" onClick={() => openMediaLibrary('additional')}>
+                          Browse
+                        </Button>
+                      </Box>
                     </Box>
                   </Grid>
 

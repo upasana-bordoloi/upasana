@@ -11,6 +11,7 @@ import {
   CardMedia,
   CardContent,
   Divider,
+  Chip,
 } from '@mui/material';
 import { formatPrice } from 'utils';
 

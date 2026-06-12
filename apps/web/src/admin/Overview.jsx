@@ -16,7 +16,6 @@ import {
   ReceiptOutlined,
   MonetizationOnOutlined,
   StarBorderOutlined,
-  FormatListBullettedOutlined,
 } from '@mui/icons-material';
 import { formatPrice } from 'utils';
 

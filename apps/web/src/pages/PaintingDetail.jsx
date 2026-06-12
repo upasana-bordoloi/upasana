@@ -25,6 +25,7 @@ import { formatPrice } from 'utils';
 export default function PaintingDetail() {
   const { slug } = useParams();
   const [zoomOpen, setZoomOpen] = useState(false);
+  const [activeImage, setActiveImage] = useState('');
   const addToCart = useCartStore((state) => state.addToCart);
   const cartItems = useCartStore((state) => state.items);
 
@@ -39,6 +40,13 @@ export default function PaintingDetail() {
   });
 
   const p = response?.data || {};
+
+  // Set active image when data loads
+  useEffect(() => {
+    if (p.image_url) {
+      setActiveImage(p.image_url);
+    }
+  }, [p]);
 
   // Set SEO Meta Title and Description dynamically
   useEffect(() => {
@@ -75,19 +83,28 @@ export default function PaintingDetail() {
 
   const inCart = cartItems.some((item) => item.id === p.id);
 
+  // Parse additional images
+  let extraImages = [];
+  try {
+    extraImages = JSON.parse(p.additional_images || '[]');
+  } catch (e) {
+    extraImages = [];
+  }
+  const allImages = [p.image_url, ...extraImages].filter(Boolean);
+
   return (
     <Container maxWidth="lg" sx={{ py: 8 }}>
       <Grid container spacing={8}>
-        {/* Left Side: Large interactive image */}
+        {/* Left Side: Large interactive image & thumbnails */}
         <Grid item xs={12} md={7}>
-          <Box sx={{ position: 'relative', cursor: 'zoom-in' }} onClick={() => setZoomOpen(true)}>
+          <Box sx={{ position: 'relative', cursor: 'zoom-in', mb: 2 }} onClick={() => setZoomOpen(true)}>
             <CardMedia
               component="img"
-              image={p.image_url || p.thumbnail_url || 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=1200&q=80'}
+              image={activeImage || 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=1200&q=80'}
               alt={p.title}
               sx={{
                 width: '100%',
-                maxHeight: '70vh',
+                maxHeight: '65vh',
                 objectFit: 'contain',
                 border: '1px solid #EBE6DF',
                 backgroundColor: '#FFFFFF',
@@ -110,6 +127,33 @@ export default function PaintingDetail() {
               Zoom
             </Button>
           </Box>
+
+          {/* Thumbnails strip for multi-image support */}
+          {allImages.length > 1 && (
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 2 }}>
+              {allImages.map((imgUrl, index) => (
+                <Box
+                  key={index}
+                  onClick={() => setActiveImage(imgUrl)}
+                  sx={{
+                    width: 80,
+                    height: 80,
+                    cursor: 'pointer',
+                    border: activeImage === imgUrl ? '2px solid #A67C52' : '1px solid #EBE6DF',
+                    opacity: activeImage === imgUrl ? 1 : 0.7,
+                    transition: 'all 0.2s ease',
+                    '&:hover': { opacity: 1, borderColor: '#A67C52' }
+                  }}
+                >
+                  <img
+                    src={imgUrl}
+                    alt={`${p.title} - ${index + 1}`}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                </Box>
+              ))}
+            </Box>
+          )}
         </Grid>
 
         {/* Right Side: Artwork specification & checkout */}
@@ -212,7 +256,7 @@ export default function PaintingDetail() {
             Close
           </Button>
           <img
-            src={p.image_url || p.thumbnail_url}
+            src={activeImage || p.image_url || p.thumbnail_url}
             alt={p.title}
             style={{ maxWidth: '100%', maxHeight: '90vh', objectFit: 'contain' }}
           />

@@ -162,7 +162,7 @@ authRouter.post('/reset-password', async (c) => {
   const db = c.env.DB;
   
   try {
-    const decoded = await verify(token, c.env.JWT_SECRET);
+    const decoded = await verify(token, c.env.JWT_SECRET, 'HS256');
     
     if (decoded.purpose !== 'reset-password') {
       return c.json({ success: false, error: 'Invalid token purpose' }, 400);

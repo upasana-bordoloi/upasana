@@ -20,7 +20,7 @@ export function requireAuth(rolesAllowed = []) {
     
     try {
       const jwtSecret = c.env.JWT_SECRET;
-      const decoded = await verify(token, jwtSecret);
+      const decoded = await verify(token, jwtSecret, 'HS256');
       c.set('user', decoded);
       
       // RBAC Validation

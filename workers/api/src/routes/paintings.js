@@ -243,8 +243,8 @@ paintingsRouter.post('/', requireAuth(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), async
   const statements = [
     db.prepare(`
       INSERT INTO paintings (
-        id, slug, title, story, description, price, currency, medium, width, height, year_created, status, featured, availability, thumbnail_url, image_url, seo_title, seo_description, og_image
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, slug, title, story, description, price, currency, medium, width, height, year_created, status, featured, availability, thumbnail_url, image_url, additional_images, seo_title, seo_description, og_image
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       paintingId,
       painting.slug,
@@ -262,6 +262,7 @@ paintingsRouter.post('/', requireAuth(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), async
       painting.availability,
       painting.thumbnail_url || null,
       painting.image_url || null,
+      painting.additional_images || null,
       painting.seo_title || painting.title,
       painting.seo_description || painting.description.substring(0, 155),
       painting.og_image || painting.image_url || null
@@ -320,7 +321,7 @@ paintingsRouter.put('/:id', requireAuth(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), asy
   const statements = [
     db.prepare(`
       UPDATE paintings
-      SET slug = ?, title = ?, story = ?, description = ?, price = ?, currency = ?, medium = ?, width = ?, height = ?, year_created = ?, status = ?, featured = ?, availability = ?, thumbnail_url = ?, image_url = ?, seo_title = ?, seo_description = ?, og_image = ?, updated_at = CURRENT_TIMESTAMP
+      SET slug = ?, title = ?, story = ?, description = ?, price = ?, currency = ?, medium = ?, width = ?, height = ?, year_created = ?, status = ?, featured = ?, availability = ?, thumbnail_url = ?, image_url = ?, additional_images = ?, seo_title = ?, seo_description = ?, og_image = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).bind(
       painting.slug,
@@ -338,6 +339,7 @@ paintingsRouter.put('/:id', requireAuth(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), asy
       painting.availability,
       painting.thumbnail_url || null,
       painting.image_url || null,
+      painting.additional_images || null,
       painting.seo_title || null,
       painting.seo_description || null,
       painting.og_image || null,
@@ -427,8 +429,8 @@ paintingsRouter.post('/bulk-import', requireAuth(['SUPER_ADMIN', 'ADMIN']), asyn
     statements.push(
       db.prepare(`
         INSERT INTO paintings (
-          id, slug, title, story, description, price, currency, medium, width, height, year_created, status, featured, availability, thumbnail_url, image_url, seo_title, seo_description, og_image
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          id, slug, title, story, description, price, currency, medium, width, height, year_created, status, featured, availability, thumbnail_url, image_url, additional_images, seo_title, seo_description, og_image
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).bind(
         paintingId,
         slug,
@@ -446,6 +448,7 @@ paintingsRouter.post('/bulk-import', requireAuth(['SUPER_ADMIN', 'ADMIN']), asyn
         item.availability || 'AVAILABLE',
         item.thumbnail_url || null,
         item.image_url || null,
+        item.additional_images || null,
         item.seo_title || item.title,
         item.seo_description || item.description?.substring(0, 155) || null,
         item.og_image || item.image_url || null

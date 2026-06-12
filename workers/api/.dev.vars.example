@@ -1,0 +1,6 @@
+# Copy this file to .dev.vars in the same directory and replace with actual credentials
+# Do NOT commit .dev.vars to version control (it is ignored in .gitignore)
+
+JWT_SECRET="super-secret-jwt-key-change-in-production"
+CLOUDINARY_API_KEY="your-api-key"
+CLOUDINARY_API_SECRET="your-api-secret"

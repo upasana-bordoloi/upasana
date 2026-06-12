@@ -38,7 +38,8 @@ INSERT INTO role_permissions (role_id, permission_id) VALUES
 
 -- Insert Default Super Admin User (password: AdminPass123!)
 INSERT INTO users (id, email, name, password_hash, is_active) VALUES
-('usr_super_admin', 'superadmin@gallery.com', 'Super Admin', 'pbkdf2_sha256$1566b29e0277041e306c9d46d5322535$bd139a966bd0408ff043d67e462697b6b62031f31b1258dab8918c256f96ab1e', 1);
+('usr_super_admin', 'superadmin@gallery.com', 'Super Admin', 'pbkdf2_sha256$100000$86d2f0397827e8d8aab955c407753a81$ec38646b8dea347665d6b4fb3eb126e37649248fe21bae130c922c8042aad1c2', 1);
+
 
 -- Associate Super Admin User with SUPER_ADMIN role
 INSERT INTO user_roles (user_id, role_id) VALUES

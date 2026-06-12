@@ -37,6 +37,7 @@ export const paintingSchema = z.object({
   availability: z.enum(['AVAILABLE', 'SOLD', 'RESERVED']).default('AVAILABLE'),
   thumbnail_url: z.string().url('Invalid thumbnail URL').optional().nullable(),
   image_url: z.string().url('Invalid image URL').optional().nullable(),
+  additional_images: z.string().optional().nullable(),
   seo_title: z.string().max(70, 'SEO Title should be 70 characters or less').optional().nullable(),
   seo_description: z.string().max(160, 'SEO Description should be 160 characters or less').optional().nullable(),
   og_image: z.string().url('Invalid Open Graph image URL').optional().nullable()

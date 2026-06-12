@@ -6,6 +6,7 @@ node_modeule/
 .env
 .env.*
 !.env.example
+.dev.vars
 
 # Logs
 logs/

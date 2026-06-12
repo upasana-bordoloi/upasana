@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "main": "src/index.js",
   "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "echo 'No build step required'",
+    "deploy": "wrangler deploy"
+  },
   "dependencies": {
     "hono": "^4.0.0",
     "schemas": "file:../../packages/schemas",

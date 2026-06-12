@@ -6,11 +6,18 @@ compatibility_date = "2026-06-12"
 JWT_SECRET = "super-secret-jwt-key-change-in-production"
 FRONTEND_URL = "http://localhost:5173"
 
+# Cloudinary Integration Config
+CLOUDINARY_CLOUD_NAME = "your-cloudinary-cloud-name"
+CLOUDINARY_UPLOAD_PRESET = "your-unsigned-preset-name"
+CLOUDINARY_API_KEY = "your-api-key"
+CLOUDINARY_API_SECRET = "your-api-secret"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "gallery-db"
-database_id = "local-d1-db"
+database_id = "ff27cb8a-50dc-4482-982e-4f09fbef1971"
 
+# R2 Buckets can remain as backup bindings
 [[r2_buckets]]
 binding = "BUCKET"
 bucket_name = "gallery-images"

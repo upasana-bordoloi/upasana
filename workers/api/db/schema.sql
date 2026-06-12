@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS paintings (
   availability TEXT NOT NULL DEFAULT 'AVAILABLE', -- 'AVAILABLE', 'SOLD', 'RESERVED'
   thumbnail_url TEXT,
   image_url TEXT,
+  additional_images TEXT, -- Store JSON list of image URLs for multi-image gallery
   seo_title TEXT,
   seo_description TEXT,
   og_image TEXT,

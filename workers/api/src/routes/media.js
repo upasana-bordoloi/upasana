@@ -49,7 +49,7 @@ mediaRouter.get('/', requireAuth(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), async (c) 
   return c.json({ success: true, data: mediaList.results });
 });
 
-// POST /api/media/upload - Upload file to R2 and registry (RBAC: SUPER_ADMIN, ADMIN, EDITOR)
+// POST /api/media/upload - Upload file to R2/Cloudinary and registry (RBAC: SUPER_ADMIN, ADMIN, EDITOR)
 mediaRouter.post('/upload', requireAuth(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), async (c) => {
   const user = c.get('user');
   const db = c.env.DB;
@@ -74,55 +74,85 @@ mediaRouter.post('/upload', requireAuth(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), asy
   }
   
   const id = crypto.randomUUID();
-  const cleanFilename = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
-  const r2Key = `${folder}/${id}-${cleanFilename}`;
+  const cloudName = c.env.CLOUDINARY_CLOUD_NAME;
+  const uploadPreset = c.env.CLOUDINARY_UPLOAD_PRESET;
   
-  // Read file data as arrayBuffer
-  const fileBuffer = await file.arrayBuffer();
+  let serveUrl = '';
+  let storageKey = '';
   
-  // Put object in R2
-  await bucket.put(r2Key, fileBuffer, {
-    httpMetadata: {
-      contentType: file.type,
-      cacheControl: 'public, max-age=31536000, immutable'
+  try {
+    if (cloudName && uploadPreset) {
+      // Cloudinary upload pipeline (unsigned)
+      const uploadForm = new FormData();
+      uploadForm.append('file', file);
+      uploadForm.append('upload_preset', uploadPreset);
+      uploadForm.append('folder', folder);
+      
+      const clRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: 'POST',
+        body: uploadForm
+      });
+      
+      const clJson = await clRes.json();
+      if (!clRes.ok || clJson.error) {
+        return c.json({ success: false, error: clJson.error?.message || 'Cloudinary upload failed' }, 400);
+      }
+      
+      serveUrl = clJson.secure_url;
+      storageKey = clJson.public_id;
+    } else if (bucket) {
+      // R2 fallback pipeline
+      const cleanFilename = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
+      storageKey = `${folder}/${id}-${cleanFilename}`;
+      const fileBuffer = await file.arrayBuffer();
+      
+      await bucket.put(storageKey, fileBuffer, {
+        httpMetadata: {
+          contentType: file.type,
+          cacheControl: 'public, max-age=31536000, immutable'
+        }
+      });
+      
+      const requestUrl = new URL(c.req.url);
+      serveUrl = `${requestUrl.origin}/api/media/file/${storageKey}`;
+    } else {
+      return c.json({ success: false, error: 'Storage not configured. Bind an R2 bucket or provide Cloudinary environment variables.' }, 500);
     }
-  });
-  
-  // Determine serving URL path
-  // During local run, prefix with worker URL. In production, use absolute domain or dynamic URL builder
-  const requestUrl = new URL(c.req.url);
-  const serveUrl = `${requestUrl.origin}/api/media/file/${r2Key}`;
-  
-  // Write registry record
-  await db.prepare(`
-    INSERT INTO media (id, filename, r2_key, mime_type, size_bytes, folder, url)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).bind(
-    id,
-    file.name,
-    r2Key,
-    file.type,
-    file.size,
-    folder,
-    serveUrl
-  ).run();
-  
-  await logAudit(db, user.id, user.email, 'UPLOAD_MEDIA', 'media', id, { filename: file.name, r2_key: r2Key });
-  
-  return c.json({
-    success: true,
-    data: {
+    
+    // Write registry record
+    await db.prepare(`
+      INSERT INTO media (id, filename, r2_key, mime_type, size_bytes, folder, url)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).bind(
       id,
-      filename: file.name,
+      file.name,
+      storageKey,
+      file.type,
+      file.size,
       folder,
-      mime_type: file.type,
-      url: serveUrl,
-      r2_key: r2Key
-    }
-  });
+      serveUrl
+    ).run();
+    
+    await logAudit(db, user.id, user.email, 'UPLOAD_MEDIA', 'media', id, { filename: file.name, r2_key: storageKey });
+    
+    return c.json({
+      success: true,
+      data: {
+        id,
+        filename: file.name,
+        folder,
+        mime_type: file.type,
+        url: serveUrl,
+        r2_key: storageKey
+      }
+    });
+  } catch (err) {
+    console.error('Upload error:', err);
+    return c.json({ success: false, error: err.message || 'Media upload failed' }, 500);
+  }
 });
 
-// DELETE /api/media/:id - Delete file from R2 and registry (RBAC: SUPER_ADMIN, ADMIN)
+// DELETE /api/media/:id - Delete file from storage and registry (RBAC: SUPER_ADMIN, ADMIN)
 mediaRouter.delete('/:id', requireAuth(['SUPER_ADMIN', 'ADMIN']), async (c) => {
   const user = c.get('user');
   const db = c.env.DB;
@@ -136,11 +166,40 @@ mediaRouter.delete('/:id', requireAuth(['SUPER_ADMIN', 'ADMIN']), async (c) => {
     return c.json({ success: false, error: 'Media file not found' }, 404);
   }
   
-  // Delete from R2 Bucket
+  const cloudName = c.env.CLOUDINARY_CLOUD_NAME;
+  const apiKey = c.env.CLOUDINARY_API_KEY;
+  const apiSecret = c.env.CLOUDINARY_API_SECRET;
+  
   try {
-    await bucket.delete(mediaRecord.r2_key);
+    if (cloudName && apiKey && apiSecret) {
+      // Cloudinary destroy signed pipeline
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+      const publicId = mediaRecord.r2_key;
+      
+      const dataToSign = `public_id=${publicId}&timestamp=${timestamp}${apiSecret}`;
+      const msgUint8 = new TextEncoder().encode(dataToSign);
+      const hashBuffer = await crypto.subtle.digest('SHA-1', msgUint8);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const signature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      
+      const destroyForm = new FormData();
+      destroyForm.append('public_id', publicId);
+      destroyForm.append('timestamp', timestamp);
+      destroyForm.append('api_key', apiKey);
+      destroyForm.append('signature', signature);
+      
+      const clRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`, {
+        method: 'POST',
+        body: destroyForm
+      });
+      const clJson = await clRes.json();
+      console.log('Cloudinary destroy response:', clJson);
+    } else if (bucket) {
+      // R2 destroy
+      await bucket.delete(mediaRecord.r2_key);
+    }
   } catch (err) {
-    console.error('Failed to delete file from R2 bucket:', err);
+    console.error('Failed to delete file from storage provider:', err);
   }
   
   // Delete database record
