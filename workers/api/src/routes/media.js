@@ -7,6 +7,10 @@ export const mediaRouter = new Hono();
 mediaRouter.get('/file/*', async (c) => {
   const bucket = c.env.BUCKET;
   
+  if (!bucket) {
+    return c.json({ success: false, error: 'R2 storage bucket is not configured' }, 500);
+  }
+  
   // Extract key from URL path
   const url = new URL(c.req.url);
   const key = decodeURIComponent(url.pathname.replace(/^\/api\/media\/file\//, ''));

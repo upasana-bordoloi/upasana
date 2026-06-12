@@ -17,8 +17,4 @@ binding = "DB"
 database_name = "gallery-db"
 database_id = "ff27cb8a-50dc-4482-982e-4f09fbef1971"
 
-# R2 Buckets can remain as backup bindings
-[[r2_buckets]]
-binding = "BUCKET"
-bucket_name = "gallery-images"
-preview_bucket_name = "gallery-images-preview"
+
