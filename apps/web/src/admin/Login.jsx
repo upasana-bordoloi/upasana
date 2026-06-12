@@ -45,7 +45,21 @@ export default function Login() {
         body: JSON.stringify(data),
       });
 
-      const result = await res.json();
+      let result = null;
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        result = await res.json();
+      } else {
+        // Handle non-JSON responses (e.g. 404, 502, or Cloudflare hosting static fallback)
+        const textResponse = await res.text();
+        console.error('Non-JSON response received:', textResponse);
+        throw new Error(
+          `Server returned an invalid response (Status ${res.status}). ` +
+          `This usually indicates that the frontend cannot reach the API Worker. ` +
+          `Please check that the /api routing is correctly configured.`
+        );
+      }
+
       if (!res.ok || !result.success) {
         throw new Error(result.error || 'Authentication failed');
       }
