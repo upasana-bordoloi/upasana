@@ -31,7 +31,10 @@ export const paintingSchema = z.object({
   medium: z.string().min(1, 'Medium is required'),
   width: z.number().positive('Width must be positive'),
   height: z.number().positive('Height must be positive'),
-  year_created: z.number().int().min(1900).max(new Date().getFullYear()),
+  year_created: z.number().int().min(1900).refine(
+    (year) => year <= new Date().getFullYear(),
+    { message: "Creation year cannot be in the future" }
+  ),
   status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).default('DRAFT'),
   featured: z.boolean().default(false),
   availability: z.enum(['AVAILABLE', 'SOLD', 'RESERVED']).default('AVAILABLE'),
