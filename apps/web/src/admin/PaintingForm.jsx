@@ -243,7 +243,7 @@ export default function PaintingForm() {
                   <Grid item xs={12} sm={4}>
                     <TextField
                       fullWidth
-                      label="Price (USD)"
+                      label="Price (INR)"
                       type="number"
                       {...register('price', { valueAsNumber: true })}
                       error={!!errors.price}
