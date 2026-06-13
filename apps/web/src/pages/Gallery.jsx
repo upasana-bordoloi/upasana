@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -20,6 +20,10 @@ import { SearchOutlined, FilterListOutlined } from '@mui/icons-material';
 import { formatPrice } from 'utils';
 
 export default function Gallery() {
+  useEffect(() => {
+    document.title = "Original Paintings Gallery | Upasana Bordoloi";
+  }, []);
+
   const [search, setSearch] = useState('');
   const [medium, setMedium] = useState('');
   const [availability, setAvailability] = useState('');

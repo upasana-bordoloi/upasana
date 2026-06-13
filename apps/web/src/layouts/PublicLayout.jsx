@@ -71,7 +71,7 @@ export default function PublicLayout() {
                 letterSpacing: '0.05em',
               }}
             >
-              ART GALLERY
+              UPASANA BORDOLOI
             </Typography>
 
             {/* Desktop Navigation */}

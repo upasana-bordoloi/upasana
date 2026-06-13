@@ -51,7 +51,7 @@ export default function PaintingDetail() {
   // Set SEO Meta Title and Description dynamically
   useEffect(() => {
     if (p.title) {
-      document.title = p.seo_title || `${p.title} | Original Painting`;
+      document.title = p.seo_title || `${p.title} | Original Painting by Upasana Bordoloi`;
       const metaDescription = document.querySelector('meta[name="description"]');
       if (metaDescription) {
         metaDescription.setAttribute('content', p.seo_description || p.description.substring(0, 160));

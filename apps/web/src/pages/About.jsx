@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Container,
@@ -13,6 +13,10 @@ import {
 } from '@mui/material';
 
 export default function About() {
+  useEffect(() => {
+    document.title = "About the Artist | Upasana Bordoloi";
+  }, []);
+
   const { data: settingsRes } = useQuery({
     queryKey: ['settings'],
     queryFn: () => fetch('/api/settings').then(res => res.json())

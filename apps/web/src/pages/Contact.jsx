@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
@@ -15,6 +15,10 @@ import {
 } from '@mui/material';
 
 export default function Contact() {
+  useEffect(() => {
+    document.title = "Contact | Upasana Bordoloi";
+  }, []);
+
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
