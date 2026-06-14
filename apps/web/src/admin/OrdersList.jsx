@@ -21,6 +21,7 @@ import {
   MenuItem,
   Divider,
   TablePagination,
+  Grid,
 } from '@mui/material';
 import { RemoveRedEyeOutlined } from '@mui/icons-material';
 import { formatPrice } from 'utils';
@@ -161,7 +162,7 @@ export default function OrdersList() {
                       sx={{ borderRadius: 0 }}
                       color={
                         o.status === 'DELIVERED' ? 'success' :
-                        o.status === 'PENDING' ? 'warning' : 'info'
+                          o.status === 'PENDING' ? 'warning' : 'info'
                       }
                     />
                   </TableCell>
