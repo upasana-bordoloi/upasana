@@ -33,7 +33,21 @@ export default function Gallery() {
   const [availability, setAvailability] = useState('');
   const [sort, setSort] = useState('newest');
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(3);
+  const [limit, setLimit] = useState(6);
+
+  // Fetch settings for default page size limit
+  const { data: settingsRes } = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => fetch('/api/settings').then((res) => res.json()),
+  });
+  const settings = settingsRes?.data || {};
+  const defaultLimit = parseInt(settings.pagination_limit_gallery || '6', 10);
+
+  useEffect(() => {
+    if (defaultLimit) {
+      setLimit(defaultLimit);
+    }
+  }, [defaultLimit]);
 
   // Query API with parameters
   const { data: response, isLoading } = useQuery({

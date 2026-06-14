@@ -105,7 +105,11 @@ export const siteSettingsSchema = z.object({
   footer_content: z.string().optional().nullable(),
   seo_default_title: z.string().min(1, 'Default SEO title is required'),
   seo_default_description: z.string().min(1, 'Default SEO description is required'),
-  imgbb_api_key: z.string().optional().nullable()
+  imgbb_api_key: z.string().optional().nullable(),
+  pagination_limit_gallery: z.string().regex(/^\d+$/, 'Must be a positive number').optional().nullable(),
+  pagination_limit_admin_paintings: z.string().regex(/^\d+$/, 'Must be a positive number').optional().nullable(),
+  pagination_limit_admin_orders: z.string().regex(/^\d+$/, 'Must be a positive number').optional().nullable(),
+  pagination_limit_admin_users: z.string().regex(/^\d+$/, 'Must be a positive number').optional().nullable()
 });
 
 // Contact Form Validation

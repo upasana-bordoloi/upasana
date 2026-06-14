@@ -49,6 +49,10 @@ export default function SettingsManager() {
       seo_default_title: '',
       seo_default_description: '',
       imgbb_api_key: '',
+      pagination_limit_gallery: '',
+      pagination_limit_admin_paintings: '',
+      pagination_limit_admin_orders: '',
+      pagination_limit_admin_users: '',
     }
   });
 
@@ -69,6 +73,10 @@ export default function SettingsManager() {
         seo_default_title: settings.seo_default_title || '',
         seo_default_description: settings.seo_default_description || '',
         imgbb_api_key: settings.imgbb_api_key || '',
+        pagination_limit_gallery: settings.pagination_limit_gallery || '6',
+        pagination_limit_admin_paintings: settings.pagination_limit_admin_paintings || '10',
+        pagination_limit_admin_orders: settings.pagination_limit_admin_orders || '10',
+        pagination_limit_admin_users: settings.pagination_limit_admin_users || '10',
       });
     }
   }, [settings, reset]);
@@ -247,18 +255,58 @@ export default function SettingsManager() {
 
                 <Grid item xs={12}><Divider /></Grid>
 
-                {/* Integrations */}
+                {/* Integrations & Limits */}
                 <Grid item xs={12}>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Integrations & API Storage</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Integrations & Pagination Limits</Typography>
                   <Grid container spacing={3}>
-                    <Grid item xs={12}>
+                    <Grid item xs={12} sm={6}>
                       <TextField
                         fullWidth
                         label="ImgBB API Key"
                         type="password"
                         {...register('imgbb_api_key')}
                         error={!!errors.imgbb_api_key}
-                        helperText={errors.imgbb_api_key?.message || "Enter your ImgBB API key to handle artwork image uploads. This bypasses Cloudflare R2 / Cloudinary storage."}
+                        helperText={errors.imgbb_api_key?.message || "Optional. If configured, media library uploads will use ImgBB."}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Public Gallery Page Size"
+                        type="text"
+                        {...register('pagination_limit_gallery')}
+                        error={!!errors.pagination_limit_gallery}
+                        helperText={errors.pagination_limit_gallery?.message || "Default number of paintings shown per page in public gallery. (e.g. 6)"}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <TextField
+                        fullWidth
+                        label="Admin Paintings Page Size"
+                        type="text"
+                        {...register('pagination_limit_admin_paintings')}
+                        error={!!errors.pagination_limit_admin_paintings}
+                        helperText={errors.pagination_limit_admin_paintings?.message || "Default rows per page in admin paintings list."}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <TextField
+                        fullWidth
+                        label="Admin Orders Page Size"
+                        type="text"
+                        {...register('pagination_limit_admin_orders')}
+                        error={!!errors.pagination_limit_admin_orders}
+                        helperText={errors.pagination_limit_admin_orders?.message || "Default rows per page in admin customer orders."}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <TextField
+                        fullWidth
+                        label="Admin Users Page Size"
+                        type="text"
+                        {...register('pagination_limit_admin_users')}
+                        error={!!errors.pagination_limit_admin_users}
+                        helperText={errors.pagination_limit_admin_users?.message || "Default rows per page in admin staff accounts."}
                       />
                     </Grid>
                   </Grid>

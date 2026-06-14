@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Box,
@@ -42,6 +42,20 @@ export default function OrdersList() {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
+
+  // Fetch site settings
+  const { data: settingsRes } = useQuery({
+    queryKey: ['adminSettings'],
+    queryFn: () => fetch('/api/settings').then((res) => res.json()),
+  });
+  const settings = settingsRes?.data || {};
+  const defaultLimit = parseInt(settings.pagination_limit_admin_orders || '10', 10);
+
+  useEffect(() => {
+    if (defaultLimit) {
+      setRowsPerPage(defaultLimit);
+    }
+  }, [defaultLimit]);
 
   // Fetch orders
   const { data: ordersRes, isLoading } = useQuery({
