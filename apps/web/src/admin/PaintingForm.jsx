@@ -20,10 +20,12 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  Grid2,
+  DialogActions,
   Paper,
   IconButton,
   Divider,
+  CircularProgress,
+  Snackbar,
 } from '@mui/material';
 import { CloseOutlined, ImageOutlined, ArrowBackOutlined } from '@mui/icons-material';
 
@@ -31,11 +33,17 @@ export default function PaintingForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  
   const [mediaTarget, setMediaTarget] = useState(null); // 'image_url', 'thumbnail_url', or 'additional'
   const [mediaList, setMediaList] = useState([]);
   const [additionalUrls, setAdditionalUrls] = useState([]);
   const [newAdditionalUrl, setNewAdditionalUrl] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [formDataToSubmit, setFormDataToSubmit] = useState(null);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
 
   const isEdit = !!id;
 
@@ -54,7 +62,7 @@ export default function PaintingForm() {
     setValue,
     watch,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm({
     resolver: zodResolver(paintingSchema),
     defaultValues: {
@@ -160,10 +168,16 @@ export default function PaintingForm() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminPaintingsList']);
-      navigate('/admin/paintings');
+      setConfirmOpen(false);
+      setSuccessMsg(isEdit ? 'Painting details updated successfully!' : 'New painting registered successfully!');
+      setSuccessOpen(true);
+      setTimeout(() => {
+        navigate('/admin/paintings');
+      }, 1500);
     },
     onError: (err) => {
       setErrorMsg(err.message || 'Operation failed. Please review values.');
+      setConfirmOpen(false);
     },
   });
 
@@ -173,13 +187,20 @@ export default function PaintingForm() {
       ...data,
       additional_images: JSON.stringify(additionalUrls),
     };
-    mutation.mutate(payload);
+    setFormDataToSubmit(payload);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmSubmit = () => {
+    if (formDataToSubmit) {
+      mutation.mutate(formDataToSubmit);
+    }
   };
 
   return (
     <Box>
       <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <IconButton component={RouterLink} to="/admin/paintings">
+        <IconButton component={RouterLink} to="/admin/paintings" disabled={mutation.isPending}>
           <ArrowBackOutlined />
         </IconButton>
         <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 600 }}>
@@ -194,9 +215,9 @@ export default function PaintingForm() {
       )}
 
       <Card sx={{ border: '1px solid #EBE6DF', borderRadius: 0, boxShadow: 'none' }}>
-        <CardContent sx={{ p: 4 }}>
+        <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
           <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
-            <Grid container spacing={3}>
+            <Grid container spacing={4}>
               {/* Left Column - Details */}
               <Grid item xs={12} md={8}>
                 <Grid container spacing={3}>
@@ -206,7 +227,8 @@ export default function PaintingForm() {
                       label="Painting Title"
                       {...register('title')}
                       error={!!errors.title}
-                      helperText={errors.title?.message}
+                      helperText={errors.title?.message || "The title of the artwork (e.g. Whispers of Autumn). Required."}
+                      disabled={mutation.isPending}
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -215,7 +237,8 @@ export default function PaintingForm() {
                       label="URL Slug"
                       {...register('slug')}
                       error={!!errors.slug}
-                      helperText={errors.slug?.message}
+                      helperText={errors.slug?.message || "URL-friendly string. Auto-generated from title, must contain only lowercase letters, numbers, and dashes. Required."}
+                      disabled={mutation.isPending}
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -226,7 +249,8 @@ export default function PaintingForm() {
                       rows={5}
                       {...register('story')}
                       error={!!errors.story}
-                      helperText={errors.story?.message}
+                      helperText={errors.story?.message || "Explain the concept, emotions, or creative inspiration behind this artwork. (Max 2000 characters)"}
+                      disabled={mutation.isPending}
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -237,7 +261,8 @@ export default function PaintingForm() {
                       rows={4}
                       {...register('description')}
                       error={!!errors.description}
-                      helperText={errors.description?.message}
+                      helperText={errors.description?.message || "Include physical specifications, canvas textures, framing details, or storage instructions. Required."}
+                      disabled={mutation.isPending}
                     />
                   </Grid>
                   <Grid item xs={12} sm={4}>
@@ -247,7 +272,8 @@ export default function PaintingForm() {
                       type="number"
                       {...register('price', { valueAsNumber: true })}
                       error={!!errors.price}
-                      helperText={errors.price?.message}
+                      helperText={errors.price?.message || "Listing price in Indian Rupees (₹). Must be positive. Required."}
+                      disabled={mutation.isPending}
                     />
                   </Grid>
                   <Grid item xs={12} sm={4}>
@@ -257,7 +283,8 @@ export default function PaintingForm() {
                       placeholder="e.g. Oil on Canvas"
                       {...register('medium')}
                       error={!!errors.medium}
-                      helperText={errors.medium?.message}
+                      helperText={errors.medium?.message || "Materials/techniques used (e.g., Oil on Linen, Watercolor). Required."}
+                      disabled={mutation.isPending}
                     />
                   </Grid>
                   <Grid item xs={12} sm={4}>
@@ -267,7 +294,8 @@ export default function PaintingForm() {
                       type="number"
                       {...register('year_created', { valueAsNumber: true })}
                       error={!!errors.year_created}
-                      helperText={errors.year_created?.message}
+                      helperText={errors.year_created?.message || "The year this artwork was completed (e.g., 2026). Required."}
+                      disabled={mutation.isPending}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
@@ -277,7 +305,8 @@ export default function PaintingForm() {
                       type="number"
                       {...register('width', { valueAsNumber: true })}
                       error={!!errors.width}
-                      helperText={errors.width?.message}
+                      helperText={errors.width?.message || "Width of the canvas in inches. Required."}
+                      disabled={mutation.isPending}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
@@ -287,7 +316,8 @@ export default function PaintingForm() {
                       type="number"
                       {...register('height', { valueAsNumber: true })}
                       error={!!errors.height}
-                      helperText={errors.height?.message}
+                      helperText={errors.height?.message || "Height of the canvas in inches. Required."}
+                      disabled={mutation.isPending}
                     />
                   </Grid>
                 </Grid>
@@ -303,6 +333,8 @@ export default function PaintingForm() {
                       label="Availability"
                       {...register('availability')}
                       error={!!errors.availability}
+                      disabled={mutation.isPending}
+                      helperText="Specify if the artwork is for sale, sold, or reserved."
                     >
                       <MenuItem value="AVAILABLE">Available</MenuItem>
                       <MenuItem value="SOLD">Sold</MenuItem>
@@ -316,6 +348,8 @@ export default function PaintingForm() {
                       label="Listing Status"
                       {...register('status')}
                       error={!!errors.status}
+                      disabled={mutation.isPending}
+                      helperText="DRAFT is invisible to public. PUBLISHED is live."
                     >
                       <MenuItem value="DRAFT">Draft</MenuItem>
                       <MenuItem value="PUBLISHED">Published</MenuItem>
@@ -324,7 +358,7 @@ export default function PaintingForm() {
                   </Grid>
                   <Grid item xs={12}>
                     <FormControlLabel
-                      control={<Checkbox {...register('featured')} checked={watch('featured')} />}
+                      control={<Checkbox {...register('featured')} checked={watch('featured')} disabled={mutation.isPending} />}
                       label="Feature this painting on Home Page"
                     />
                   </Grid>
@@ -339,8 +373,10 @@ export default function PaintingForm() {
                         label="Primary Image URL"
                         {...register('image_url')}
                         error={!!errors.image_url}
+                        helperText="Full resolution URL. (Recommended)"
+                        disabled={mutation.isPending}
                       />
-                      <Button variant="outlined" onClick={() => openMediaLibrary('image_url')} sx={{ minWidth: 48, p: 0 }}>
+                      <Button variant="outlined" onClick={() => openMediaLibrary('image_url')} sx={{ minWidth: 48, p: 0, height: 56 }} disabled={mutation.isPending}>
                         <ImageOutlined />
                       </Button>
                     </Box>
@@ -351,8 +387,10 @@ export default function PaintingForm() {
                         label="Thumbnail Image URL"
                         {...register('thumbnail_url')}
                         error={!!errors.thumbnail_url}
+                        helperText="Compressed/small preview URL."
+                        disabled={mutation.isPending}
                       />
-                      <Button variant="outlined" onClick={() => openMediaLibrary('thumbnail_url')} sx={{ minWidth: 48, p: 0 }}>
+                      <Button variant="outlined" onClick={() => openMediaLibrary('thumbnail_url')} sx={{ minWidth: 48, p: 0, height: 56 }} disabled={mutation.isPending}>
                         <ImageOutlined />
                       </Button>
                     </Box>
@@ -379,7 +417,7 @@ export default function PaintingForm() {
                           >
                             {url}
                           </Typography>
-                          <Button size="small" color="error" onClick={() => handleRemoveAdditionalUrl(index)}>
+                          <Button size="small" color="error" onClick={() => handleRemoveAdditionalUrl(index)} disabled={mutation.isPending}>
                             Remove
                           </Button>
                         </Box>
@@ -392,10 +430,12 @@ export default function PaintingForm() {
                           size="small"
                           value={newAdditionalUrl}
                           onChange={(e) => setNewAdditionalUrl(e.target.value)}
+                          disabled={mutation.isPending}
                         />
                         <Button
                           variant="outlined"
                           size="small"
+                          disabled={mutation.isPending}
                           onClick={() => {
                             handleAddAdditionalUrl(newAdditionalUrl);
                             setNewAdditionalUrl('');
@@ -403,7 +443,7 @@ export default function PaintingForm() {
                         >
                           Add
                         </Button>
-                        <Button variant="outlined" size="small" onClick={() => openMediaLibrary('additional')}>
+                        <Button variant="outlined" size="small" onClick={() => openMediaLibrary('additional')} disabled={mutation.isPending}>
                           Browse
                         </Button>
                       </Box>
@@ -412,13 +452,14 @@ export default function PaintingForm() {
 
                   <Grid item xs={12}>
                     <Divider sx={{ my: 2 }} />
-                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>SEO Settings</Typography>
+                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>SEO Settings (Search Engines)</Typography>
                     <TextField
                       fullWidth
                       label="SEO Meta Title"
                       {...register('seo_title')}
                       error={!!errors.seo_title}
-                      helperText={errors.seo_title?.message}
+                      helperText={errors.seo_title?.message || "Optional. Custom browser tab title. Max 70 characters."}
+                      disabled={mutation.isPending}
                       sx={{ mb: 2 }}
                     />
                     <TextField
@@ -428,7 +469,8 @@ export default function PaintingForm() {
                       rows={3}
                       {...register('seo_description')}
                       error={!!errors.seo_description}
-                      helperText={errors.seo_description?.message}
+                      helperText={errors.seo_description?.message || "Optional. Snippet summarizing content in search results. Max 160 characters."}
+                      disabled={mutation.isPending}
                     />
                   </Grid>
                 </Grid>
@@ -438,11 +480,11 @@ export default function PaintingForm() {
               <Grid item xs={12}>
                 <Divider sx={{ my: 3 }} />
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-                  <Button variant="outlined" component={RouterLink} to="/admin/paintings">
+                  <Button variant="outlined" component={RouterLink} to="/admin/paintings" disabled={mutation.isPending}>
                     Cancel
                   </Button>
-                  <Button type="submit" variant="contained" disabled={isSubmitting}>
-                    {isSubmitting ? 'Saving...' : 'Save Painting'}
+                  <Button type="submit" variant="contained" disabled={mutation.isPending}>
+                    {mutation.isPending ? 'Processing...' : isEdit ? 'Save Changes' : 'Register Painting'}
                   </Button>
                 </Box>
               </Grid>
@@ -450,6 +492,58 @@ export default function PaintingForm() {
           </Box>
         </CardContent>
       </Card>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+        <DialogTitle sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 600 }}>
+          {isEdit ? 'Confirm Update' : 'Confirm Registration'}
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+            {isEdit
+              ? 'Are you sure you want to save the updated details for this painting listing?'
+              : 'Are you sure you want to register and add this new painting artwork to the gallery?'}
+          </Typography>
+          {formDataToSubmit && (
+            <Box sx={{ p: 2, backgroundColor: '#FAF8F5', border: '1px solid #EBE6DF', borderRadius: 0 }}>
+              <Typography variant="subtitle2" fontWeight="600">
+                Title: {formDataToSubmit.title}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" display="block">
+                Medium: {formDataToSubmit.medium} | Dimensions: {formDataToSubmit.width} x {formDataToSubmit.height} in
+              </Typography>
+              <Typography variant="caption" color="text.secondary" display="block">
+                Price: ₹ {formDataToSubmit.price} | Status: {formDataToSubmit.status} | Availability: {formDataToSubmit.availability}
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={() => setConfirmOpen(false)} disabled={mutation.isPending}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmSubmit}
+            variant="contained"
+            disabled={mutation.isPending}
+            startIcon={mutation.isPending ? <CircularProgress size={18} color="inherit" /> : null}
+          >
+            {mutation.isPending ? 'Saving...' : 'Confirm'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Success Snackbar Toast */}
+      <Snackbar
+        open={successOpen}
+        autoHideDuration={1500}
+        onClose={() => setSuccessOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert severity="success" sx={{ width: '100%', borderRadius: 0 }}>
+          {successMsg}
+        </Alert>
+      </Snackbar>
 
       {/* Media Selection Dialog Modal */}
       <Dialog open={!!mediaTarget} onClose={() => setMediaTarget(null)} maxWidth="md" fullWidth>
