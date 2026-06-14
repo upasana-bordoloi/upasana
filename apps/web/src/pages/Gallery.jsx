@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Container,
@@ -24,16 +24,20 @@ export default function Gallery() {
     document.title = "Original Paintings Gallery | Upasana Bordoloi";
   }, []);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const collectionParam = searchParams.get('collection') || '';
+  const categoryParam = searchParams.get('category') || '';
+
   const [search, setSearch] = useState('');
   const [medium, setMedium] = useState('');
   const [availability, setAvailability] = useState('');
   const [sort, setSort] = useState('newest');
   const [page, setPage] = useState(1);
-  const limit = 6;
+  const [limit, setLimit] = useState(3);
 
   // Query API with parameters
   const { data: response, isLoading } = useQuery({
-    queryKey: ['paintings', search, medium, availability, sort, page],
+    queryKey: ['paintings', search, medium, availability, sort, page, limit, collectionParam, categoryParam],
     queryFn: async () => {
       const url = new URL('/api/paintings', window.location.origin);
       url.searchParams.set('page', String(page));
@@ -42,6 +46,8 @@ export default function Gallery() {
       if (medium) url.searchParams.set('medium', medium);
       if (availability) url.searchParams.set('availability', availability);
       if (sort) url.searchParams.set('sort', sort);
+      if (collectionParam) url.searchParams.set('collection', collectionParam);
+      if (categoryParam) url.searchParams.set('category', categoryParam);
       
       const res = await fetch(url.toString());
       return res.json();
@@ -58,6 +64,7 @@ export default function Gallery() {
     setAvailability('');
     setSort('newest');
     setPage(1);
+    setSearchParams({});
   };
 
   return (
@@ -72,7 +79,7 @@ export default function Gallery() {
 
       {/* Controls & Search */}
       <Grid container spacing={3} sx={{ mb: 6 }}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.5}>
           <TextField
             fullWidth
             placeholder="Search paintings..."
@@ -87,7 +94,7 @@ export default function Gallery() {
             }}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.5}>
           <TextField
             fullWidth
             select
@@ -130,8 +137,22 @@ export default function Gallery() {
             <MenuItem value="title-asc">Alphabetical: A-Z</MenuItem>
           </TextField>
         </Grid>
-        <Grid item xs={12} md={2} sx={{ display: 'flex', alignItems: 'center' }}>
-          <Button variant="outlined" fullWidth onClick={handleResetFilters}>
+        <Grid item xs={12} sm={6} md={1.5}>
+          <TextField
+            fullWidth
+            select
+            label="Per Page"
+            value={limit}
+            onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
+          >
+            <MenuItem value={3}>3 Items</MenuItem>
+            <MenuItem value={6}>6 Items</MenuItem>
+            <MenuItem value={9}>9 Items</MenuItem>
+            <MenuItem value={12}>12 Items</MenuItem>
+          </TextField>
+        </Grid>
+        <Grid item xs={12} sm={6} md={1.5} sx={{ display: 'flex', alignItems: 'center' }}>
+          <Button variant="outlined" fullWidth onClick={handleResetFilters} sx={{ height: 56 }}>
             Clear
           </Button>
         </Grid>

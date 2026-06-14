@@ -24,6 +24,7 @@ import {
   MenuItem,
   Alert,
   Switch,
+  TablePagination,
 } from '@mui/material';
 import { DeleteOutlineOutlined } from '@mui/icons-material';
 
@@ -32,12 +33,25 @@ export default function UsersList() {
   const [createOpen, setCreateOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   // Fetch users
   const { data: usersRes, isLoading } = useQuery({
     queryKey: ['adminUsersList'],
     queryFn: () => fetch('/api/users').then(res => res.json())
   });
   const users = usersRes?.data || [];
+  const paginatedUsers = users.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   const {
     register,
@@ -147,7 +161,7 @@ export default function UsersList() {
                 </TableCell>
               </TableRow>
             ) : (
-              users.map((u) => (
+              paginatedUsers.map((u) => (
                 <TableRow key={u.id}>
                   <TableCell sx={{ fontWeight: 600 }}>{u.name}</TableCell>
                   <TableCell>{u.email}</TableCell>
@@ -177,6 +191,17 @@ export default function UsersList() {
           </TableBody>
         </Table>
       </TableContainer>
+
+      <TablePagination
+        rowsPerPageOptions={[5, 10, 25, 50]}
+        component="div"
+        count={users.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        sx={{ borderTop: '1px solid #EBE6DF', mt: 1 }}
+      />
 
       {/* Create User Dialog */}
       <Dialog open={createOpen} onClose={() => setCreateOpen(false)} maxWidth="xs" fullWidth>

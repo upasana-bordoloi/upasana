@@ -20,6 +20,7 @@ import {
   TextField,
   MenuItem,
   Divider,
+  TablePagination,
 } from '@mui/material';
 import { RemoveRedEyeOutlined } from '@mui/icons-material';
 import { formatPrice } from 'utils';
@@ -30,12 +31,25 @@ export default function OrdersList() {
   const [statusVal, setStatusVal] = useState('');
   const [paymentVal, setPaymentVal] = useState('');
 
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   // Fetch orders
   const { data: ordersRes, isLoading } = useQuery({
     queryKey: ['adminOrdersList'],
     queryFn: () => fetch('/api/orders').then(res => res.json())
   });
   const orders = ordersRes?.data || [];
+  const paginatedOrders = orders.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   // Update Status Mutation
   const updateMutation = useMutation({
@@ -110,7 +124,7 @@ export default function OrdersList() {
                 </TableCell>
               </TableRow>
             ) : (
-              orders.map((o) => (
+              paginatedOrders.map((o) => (
                 <TableRow key={o.id}>
                   <TableCell sx={{ fontWeight: 600 }}>{o.order_number}</TableCell>
                   <TableCell>{o.customer_first_name} {o.customer_last_name}</TableCell>
@@ -148,6 +162,17 @@ export default function OrdersList() {
           </TableBody>
         </Table>
       </TableContainer>
+
+      <TablePagination
+        rowsPerPageOptions={[5, 10, 25, 50]}
+        component="div"
+        count={orders.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        sx={{ borderTop: '1px solid #EBE6DF', mt: 1 }}
+      />
 
       {/* Order Details and Status Management Dialog */}
       <Dialog open={!!selectedOrder} onClose={() => setSelectedOrder(null)} maxWidth="sm" fullWidth>

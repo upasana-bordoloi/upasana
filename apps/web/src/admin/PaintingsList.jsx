@@ -20,6 +20,7 @@ import {
   DialogActions,
   TextField,
   Alert,
+  TablePagination,
 } from '@mui/material';
 import {
   EditOutlined,
@@ -37,12 +38,25 @@ export default function PaintingsList() {
   const [importJson, setImportJson] = useState('');
   const [importError, setImportError] = useState('');
 
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   // Fetch paintings list
   const { data: paintingsRes, isLoading } = useQuery({
     queryKey: ['adminPaintingsList'],
     queryFn: () => fetch('/api/paintings?limit=1000').then((res) => res.json()),
   });
   const paintings = paintingsRes?.data || [];
+  const paginatedPaintings = paintings.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   // Delete Mutation
   const deleteMutation = useMutation({
@@ -183,7 +197,7 @@ export default function PaintingsList() {
                 </TableCell>
               </TableRow>
             ) : (
-              paintings.map((p) => (
+              paginatedPaintings.map((p) => (
                 <TableRow key={p.id}>
                   <TableCell>
                     <img
@@ -230,6 +244,17 @@ export default function PaintingsList() {
           </TableBody>
         </Table>
       </TableContainer>
+
+      <TablePagination
+        rowsPerPageOptions={[5, 10, 25, 50]}
+        component="div"
+        count={paintings.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        sx={{ borderTop: '1px solid #EBE6DF', mt: 1 }}
+      />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!deleteId} onClose={() => setDeleteId(null)}>
