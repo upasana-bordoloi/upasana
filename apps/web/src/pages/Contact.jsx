@@ -42,17 +42,19 @@ export default function Contact() {
     setSuccess(false);
     setErrorMsg('');
     try {
-      // Mock submit or post to api endpoint if existing
-      const res = await fetch('/api/settings', { // fall back or custom api post
+      const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      // Set mock success for front-end demonstration
+      const result = await res.json();
+      if (!res.ok || !result.success) {
+        throw new Error(result.error || 'Failed to send message');
+      }
       setSuccess(true);
       reset();
     } catch (e) {
-      setErrorMsg('Failed to send message. Please try again.');
+      setErrorMsg(e.message || 'Failed to send message. Please try again.');
     }
   };
 

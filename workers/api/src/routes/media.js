@@ -85,7 +85,28 @@ mediaRouter.post('/upload', requireAuth(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), asy
   let storageKey = '';
   
   try {
-    if (cloudName && uploadPreset) {
+    // Check for ImgBB API Key in site settings, then environment variable
+    const imgbbKeySetting = await db.prepare("SELECT value FROM site_settings WHERE key = 'imgbb_api_key' LIMIT 1").first();
+    const imgbbApiKey = imgbbKeySetting ? imgbbKeySetting.value : c.env.IMGBB_API_KEY;
+
+    if (imgbbApiKey && imgbbApiKey.trim() !== '') {
+      // ImgBB Upload Pipeline
+      const uploadForm = new FormData();
+      uploadForm.append('image', file);
+      
+      const imgbbRes = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey.trim()}`, {
+        method: 'POST',
+        body: uploadForm
+      });
+      
+      const imgbbJson = await imgbbRes.json();
+      if (!imgbbRes.ok || !imgbbJson.success) {
+        return c.json({ success: false, error: imgbbJson.error?.message || 'ImgBB upload failed' }, 400);
+      }
+      
+      serveUrl = imgbbJson.data.url;
+      storageKey = imgbbJson.data.id;
+    } else if (cloudName && uploadPreset && cloudName !== 'your-cloudinary-cloud-name') {
       // Cloudinary upload pipeline (unsigned)
       const uploadForm = new FormData();
       uploadForm.append('file', file);
@@ -120,7 +141,7 @@ mediaRouter.post('/upload', requireAuth(['SUPER_ADMIN', 'ADMIN', 'EDITOR']), asy
       const requestUrl = new URL(c.req.url);
       serveUrl = `${requestUrl.origin}/api/media/file/${storageKey}`;
     } else {
-      return c.json({ success: false, error: 'Storage not configured. Bind an R2 bucket or provide Cloudinary environment variables.' }, 500);
+      return c.json({ success: false, error: 'Storage not configured. Please configure an ImgBB API Key in settings.' }, 400);
     }
     
     // Write registry record

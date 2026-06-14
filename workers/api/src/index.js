@@ -6,6 +6,7 @@ import { mediaRouter } from './routes/media.js';
 import { ordersRouter } from './routes/orders.js';
 import { settingsRouter } from './routes/settings.js';
 import { usersRouter } from './routes/users.js';
+import { contactRouter } from './routes/contact.js';
 
 const app = new Hono();
 
@@ -30,6 +31,7 @@ app.route('/api/media', mediaRouter);
 app.route('/api/orders', ordersRouter);
 app.route('/api/settings', settingsRouter);
 app.route('/api/users', usersRouter);
+app.route('/api/contact', contactRouter);
 
 // Global Error Handler
 app.onError((err, c) => {

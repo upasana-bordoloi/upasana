@@ -27,6 +27,7 @@ import MediaLibrary from './admin/MediaLibrary.jsx';
 import OrdersList from './admin/OrdersList.jsx';
 import SettingsManager from './admin/SettingsManager.jsx';
 import UsersList from './admin/UsersList.jsx';
+import Messages from './admin/Messages.jsx';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -69,6 +70,7 @@ export default function App() {
               <Route path="orders" element={<OrdersList />} />
               <Route path="settings" element={<SettingsManager />} />
               <Route path="users" element={<UsersList />} />
+              <Route path="messages" element={<Messages />} />
             </Route>
 
             {/* Redirect fallback */}

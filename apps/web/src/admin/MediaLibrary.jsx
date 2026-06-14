@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Box,
@@ -15,6 +15,12 @@ import {
   Paper,
   Alert,
   Snackbar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  CircularProgress,
+  Skeleton,
 } from '@mui/material';
 import {
   DeleteOutlineOutlined,
@@ -28,6 +34,7 @@ export default function MediaLibrary() {
   const [uploadFile, setUploadFile] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [deleteId, setDeleteId] = useState(null);
 
   // Fetch media records
   const { data: mediaRes, isLoading } = useQuery({
@@ -56,7 +63,7 @@ export default function MediaLibrary() {
     onSuccess: () => {
       queryClient.invalidateQueries(['adminMedia']);
       setUploadFile(null);
-      setSuccessMsg('Image uploaded successfully to Cloudflare R2.');
+      setSuccessMsg('Image uploaded successfully.');
       // Reset input element
       const fileInput = document.getElementById('media-upload-input');
       if (fileInput) fileInput.value = '';
@@ -76,6 +83,11 @@ export default function MediaLibrary() {
     onSuccess: () => {
       queryClient.invalidateQueries(['adminMedia']);
       setSuccessMsg('Media deleted successfully.');
+      setDeleteId(null);
+    },
+    onError: (err) => {
+      setErrorMsg(err.message || 'Deletion failed');
+      setDeleteId(null);
     }
   });
 
@@ -92,9 +104,9 @@ export default function MediaLibrary() {
     uploadMutation.mutate({ file: uploadFile, folderName: folder });
   };
 
-  const handleDelete = (id) => {
-    if (confirm('Are you sure you want to delete this image from storage?')) {
-      deleteMutation.mutate(id);
+  const handleDeleteConfirm = () => {
+    if (deleteId) {
+      deleteMutation.mutate(deleteId);
     }
   };
 
@@ -106,7 +118,7 @@ export default function MediaLibrary() {
   return (
     <Box>
       <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 600, mb: 4 }}>
-        Media Library (R2 Storage)
+        Media Library & Asset Uploads
       </Typography>
 
       <Grid container spacing={4}>
@@ -116,7 +128,6 @@ export default function MediaLibrary() {
             <Typography variant="h6" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 600, mb: 3 }}>
               Upload Asset
             </Typography>
-            {errorMsg && <Alert severity="error" sx={{ mb: 2, borderRadius: 0 }}>{errorMsg}</Alert>}
             
             <Box component="form" onSubmit={handleUploadSubmit}>
               <Box sx={{ mb: 3 }}>
@@ -140,7 +151,8 @@ export default function MediaLibrary() {
                   component="label"
                   fullWidth
                   startIcon={<CloudUploadOutlined />}
-                  sx={{ py: 2 }}
+                  sx={{ py: 2, textTransform: 'none', borderStyle: 'dashed', borderWidth: '2px', borderColor: '#C8C4BE', '&:hover': { borderWidth: '2px', borderColor: '#A67C52' } }}
+                  disabled={uploadMutation.isPending}
                 >
                   {uploadFile ? uploadFile.name : 'Choose File'}
                   <input
@@ -158,8 +170,10 @@ export default function MediaLibrary() {
                 variant="contained"
                 fullWidth
                 disabled={!uploadFile || uploadMutation.isPending}
+                startIcon={uploadMutation.isPending ? <CircularProgress size={20} color="inherit" /> : null}
+                sx={{ py: 1.25 }}
               >
-                {uploadMutation.isPending ? 'Uploading...' : 'Upload to R2'}
+                {uploadMutation.isPending ? 'Uploading...' : 'Upload to Storage'}
               </Button>
             </Box>
           </Paper>
@@ -167,45 +181,59 @@ export default function MediaLibrary() {
 
         {/* Right column: Image grids list */}
         <Grid item xs={12} md={8}>
-          <Paper sx={{ border: '1px solid #EBE6DF', borderRadius: 0, p: 3, boxShadow: 'none' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Paper sx={{ border: '1px solid #EBE6DF', borderRadius: 0, p: 3, boxShadow: 'none', minHeight: '350px' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 1 }}>
               <Typography variant="h6" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 600 }}>
                 Files in Folder: <span style={{ color: '#A67C52', textTransform: 'capitalize' }}>{folder}</span>
               </Typography>
             </Box>
 
             {isLoading ? (
-              <Typography variant="body2" color="text.secondary">Loading assets...</Typography>
+              <Grid container spacing={2}>
+                {[1, 2, 3, 4, 5, 6].map((idx) => (
+                  <Grid item xs={12} sm={6} md={4} key={idx}>
+                    <Card sx={{ border: '1px solid #EBE6DF', boxShadow: 'none', borderRadius: 0 }}>
+                      <Skeleton variant="rectangular" height={140} />
+                      <CardContent sx={{ p: 2 }}>
+                        <Skeleton variant="text" width="80%" height={15} />
+                        <Skeleton variant="text" width="40%" height={12} sx={{ mt: 1 }} />
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
             ) : media.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">
-                No images uploaded in this folder yet.
-              </Typography>
+              <Box sx={{ py: 8, textAlign: 'center', color: 'text.secondary' }}>
+                <Typography variant="body2">
+                  No images uploaded in this folder yet.
+                </Typography>
+              </Box>
             ) : (
               <Grid container spacing={2}>
                 {media.map((item) => (
                   <Grid item xs={12} sm={6} md={4} key={item.id}>
-                    <Card sx={{ border: '1px solid #EBE6DF', boxShadow: 'none', borderRadius: 0 }}>
+                    <Card sx={{ border: '1px solid #EBE6DF', boxShadow: 'none', borderRadius: 0, overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}>
                       <CardMedia
                         component="img"
-                        height="160"
+                        height="150"
                         image={item.url}
                         alt={item.filename}
-                        sx={{ objectFit: 'cover' }}
+                        sx={{ objectFit: 'cover', transition: 'transform 0.3s ease', '&:hover': { transform: 'scale(1.05)' } }}
                       />
-                      <CardContent sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <CardContent sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 'auto' }}>
                         <Box sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '70%' }}>
-                          <Typography variant="caption" fontWeight="600" display="block">
+                          <Typography variant="caption" fontWeight="600" display="block" sx={{ textOverflow: 'ellipsis', overflow: 'hidden' }}>
                             {item.filename}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
                             {(item.size_bytes / 1024).toFixed(1)} KB
                           </Typography>
                         </Box>
-                        <Box>
+                        <Box sx={{ display: 'flex', gap: 0.5 }}>
                           <IconButton size="small" onClick={() => copyToClipboard(item.url)} title="Copy URL">
                             <ContentCopyOutlined fontSize="small" />
                           </IconButton>
-                          <IconButton size="small" onClick={() => handleDelete(item.id)} color="error" title="Delete">
+                          <IconButton size="small" onClick={() => setDeleteId(item.id)} color="error" title="Delete" disabled={deleteMutation.isPending}>
                             <DeleteOutlineOutlined fontSize="small" />
                           </IconButton>
                         </Box>
@@ -219,13 +247,40 @@ export default function MediaLibrary() {
         </Grid>
       </Grid>
 
-      {/* Notifications */}
+      {/* Delete Confirmation Dialog Modal */}
+      <Dialog open={!!deleteId} onClose={() => setDeleteId(null)}>
+        <DialogTitle sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 600 }}>Confirm Deletion</DialogTitle>
+        <DialogContent>Are you sure you want to permanently delete this image from your media library storage?</DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={() => setDeleteId(null)}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained" disabled={deleteMutation.isPending}>
+            {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Toast Notifications */}
       <Snackbar
         open={!!successMsg}
         autoHideDuration={4000}
         onClose={() => setSuccessMsg('')}
-        message={successMsg}
-      />
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setSuccessMsg('')} severity="success" sx={{ width: '100%', borderRadius: 0 }}>
+          {successMsg}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!errorMsg}
+        autoHideDuration={5000}
+        onClose={() => setErrorMsg('')}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setErrorMsg('')} severity="error" sx={{ width: '100%', borderRadius: 0 }}>
+          {errorMsg}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

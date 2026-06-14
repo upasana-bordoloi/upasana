@@ -48,6 +48,7 @@ export default function SettingsManager() {
       footer_content: '',
       seo_default_title: '',
       seo_default_description: '',
+      imgbb_api_key: '',
     }
   });
 
@@ -67,6 +68,7 @@ export default function SettingsManager() {
         footer_content: settings.footer_content || '',
         seo_default_title: settings.seo_default_title || '',
         seo_default_description: settings.seo_default_description || '',
+        imgbb_api_key: settings.imgbb_api_key || '',
       });
     }
   }, [settings, reset]);
@@ -238,6 +240,25 @@ export default function SettingsManager() {
                         {...register('footer_content')}
                         error={!!errors.footer_content}
                         helperText={errors.footer_content?.message}
+                      />
+                    </Grid>
+                  </Grid>
+                </Grid>
+
+                <Grid item xs={12}><Divider /></Grid>
+
+                {/* Integrations */}
+                <Grid item xs={12}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Integrations & API Storage</Typography>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="ImgBB API Key"
+                        type="password"
+                        {...register('imgbb_api_key')}
+                        error={!!errors.imgbb_api_key}
+                        helperText={errors.imgbb_api_key?.message || "Enter your ImgBB API key to handle artwork image uploads. This bypasses Cloudflare R2 / Cloudinary storage."}
                       />
                     </Grid>
                   </Grid>
