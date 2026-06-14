@@ -26,7 +26,7 @@ export default function OrderConfirmation() {
       </Box>
       
       <Typography variant="body1" color="text.secondary" sx={{ mb: 6, lineHeight: 1.8 }}>
-        A confirmation invoice has been sent to your email. Our studio will contact you directly within 24 hours to coordinate secure fine-art crating and white-glove shipping delivery options.
+        Your request for acquisition has been successfully registered. Please note that we do not send automated confirmation emails at this stage. Instead, our studio team will get in touch with you directly via Call, Email, SMS, WhatsApp, or Telegram using the contact details you provided. We will coordinate your preferred payment method, custom crating requirements, and secure shipment options.
       </Typography>
 
       <Button variant="contained" size="large" component={RouterLink} to="/gallery">

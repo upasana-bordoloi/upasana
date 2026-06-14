@@ -43,7 +43,9 @@ export const paintingSchema = z.object({
   additional_images: z.string().optional().nullable(),
   seo_title: z.string().max(70, 'SEO Title should be 70 characters or less').optional().nullable(),
   seo_description: z.string().max(160, 'SEO Description should be 160 characters or less').optional().nullable(),
-  og_image: z.string().url('Invalid Open Graph image URL').optional().nullable()
+  og_image: z.string().url('Invalid Open Graph image URL').optional().nullable(),
+  category_id: z.string().optional().nullable(),
+  collection_id: z.string().optional().nullable()
 });
 
 // Category & Collection Validation

@@ -195,6 +195,20 @@ paintingsRouter.get('/', async (c) => {
   });
 });
 
+// GET /api/paintings/categories - List all categories
+paintingsRouter.get('/categories', async (c) => {
+  const db = c.env.DB;
+  const categories = await db.prepare('SELECT * FROM categories ORDER BY name ASC').all();
+  return c.json({ success: true, data: categories.results });
+});
+
+// GET /api/paintings/collections - List all collections
+paintingsRouter.get('/collections', async (c) => {
+  const db = c.env.DB;
+  const collections = await db.prepare('SELECT * FROM collections ORDER BY name ASC').all();
+  return c.json({ success: true, data: collections.results });
+});
+
 // GET /api/paintings/:slug - Single Painting details
 paintingsRouter.get('/:slug', async (c) => {
   const db = c.env.DB;

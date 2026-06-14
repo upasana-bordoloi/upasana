@@ -55,6 +55,21 @@ export default function PaintingForm() {
   });
 
   const editingPainting = paintingsRes?.data?.find((p) => p.id === id);
+  
+  // Retrieve available categories
+  const { data: categoriesRes } = useQuery({
+    queryKey: ['adminCategoriesList'],
+    queryFn: () => fetch('/api/paintings/categories').then((res) => res.json()),
+  });
+
+  // Retrieve available collections
+  const { data: collectionsRes } = useQuery({
+    queryKey: ['adminCollectionsList'],
+    queryFn: () => fetch('/api/paintings/collections').then((res) => res.json()),
+  });
+
+  const categoriesList = categoriesRes?.data || [];
+  const collectionsList = collectionsRes?.data || [];
 
   const {
     register,
@@ -83,6 +98,8 @@ export default function PaintingForm() {
       additional_images: '[]',
       seo_title: '',
       seo_description: '',
+      category_id: '',
+      collection_id: '',
     },
   });
 
@@ -99,8 +116,16 @@ export default function PaintingForm() {
       }
       setAdditionalUrls(parsed);
 
+      const firstCatSlug = editingPainting.categories ? editingPainting.categories.split(',')[0] : '';
+      const firstCollSlug = editingPainting.collections ? editingPainting.collections.split(',')[0] : '';
+
+      const categoryObj = categoriesList.find(c => c.slug === firstCatSlug);
+      const collectionObj = collectionsList.find(c => c.slug === firstCollSlug);
+
       reset({
         ...editingPainting,
+        category_id: categoryObj ? categoryObj.id : '',
+        collection_id: collectionObj ? collectionObj.id : '',
         featured: editingPainting.featured === 1 || editingPainting.featured === true,
         price: parseFloat(editingPainting.price),
         width: parseFloat(editingPainting.width),
@@ -108,7 +133,7 @@ export default function PaintingForm() {
         year_created: parseInt(editingPainting.year_created, 10),
       });
     }
-  }, [isEdit, editingPainting, reset]);
+  }, [isEdit, editingPainting, categoriesRes, collectionsRes, reset]);
 
   // Auto-generate slug from title
   useEffect(() => {
@@ -354,6 +379,44 @@ export default function PaintingForm() {
                       <MenuItem value="DRAFT">Draft</MenuItem>
                       <MenuItem value="PUBLISHED">Published</MenuItem>
                       <MenuItem value="ARCHIVED">Archived</MenuItem>
+                    </TextField>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      select
+                      label="Painting Category"
+                      {...register('category_id')}
+                      error={!!errors.category_id}
+                      disabled={mutation.isPending}
+                      helperText="Group the painting under a technical medium category."
+                    >
+                      <MenuItem value="">None / Uncategorized</MenuItem>
+                      {categoriesList.map((cat) => (
+                        <MenuItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      select
+                      label="Curated Collection"
+                      {...register('collection_id')}
+                      error={!!errors.collection_id}
+                      disabled={mutation.isPending}
+                      helperText="Associate this painting with a themed series."
+                    >
+                      <MenuItem value="">None / Independent Art</MenuItem>
+                      {collectionsList.map((coll) => (
+                        <MenuItem key={coll.id} value={coll.id}>
+                          {coll.name}
+                        </MenuItem>
+                      ))}
                     </TextField>
                   </Grid>
                   <Grid item xs={12}>
