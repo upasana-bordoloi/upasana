@@ -1,4 +1,6 @@
 import { Hono } from 'hono';
+import { verify } from 'hono/jwt';
+import { getCookie } from 'hono/cookie';
 import { paintingSchema } from 'schemas';
 import { slugify, getPaginationParams } from 'utils';
 import { requireAuth, logAudit } from '../middleware/auth.js';
@@ -22,10 +24,25 @@ paintingsRouter.get('/', async (c) => {
   
   // Role checking for unpublished status
   const authHeader = c.req.header('Authorization');
-  let isAdmin = false;
+  let token = '';
   if (authHeader && authHeader.startsWith('Bearer ')) {
-    isAdmin = true; // Simple check for admin listing
+    token = authHeader.substring(7);
+  } else {
+    token = getCookie(c, 'token');
   }
+
+  let isAdmin = false;
+  if (token) {
+    try {
+      const decoded = await verify(token, c.env.JWT_SECRET, 'HS256');
+      if (decoded && ['SUPER_ADMIN', 'ADMIN', 'EDITOR'].includes(decoded.role)) {
+        isAdmin = true;
+      }
+    } catch (e) {
+      // Invalid or expired token
+    }
+  }
+  
   const statusFilter = searchParams.get('status') || (isAdmin ? '' : 'PUBLISHED');
   
   const sort = searchParams.get('sort') || 'newest'; // newest, price-asc, price-desc, title-asc
