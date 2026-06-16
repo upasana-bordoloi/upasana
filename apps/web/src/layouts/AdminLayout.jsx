@@ -15,6 +15,8 @@ import {
   ListItemText,
   Avatar,
   Chip,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import {
   DashboardOutlined,
@@ -28,12 +30,13 @@ import {
   MenuOutlined,
   MailOutlined,
 } from '@mui/icons-material';
-import { useAuthStore } from '../store/store.js';
+import { useAuthStore, useToastStore } from '../store/store.js';
 
 const drawerWidth = 260;
 
 export default function AdminLayout() {
   const { user, logout } = useAuthStore();
+  const { open, message, severity, closeToast } = useToastStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -273,6 +276,18 @@ export default function AdminLayout() {
       >
         <Outlet />
       </Box>
+
+      {/* Global Admin Toast Notifications */}
+      <Snackbar
+        open={open}
+        autoHideDuration={5000}
+        onClose={closeToast}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={closeToast} severity={severity} sx={{ width: '100%', borderRadius: 0 }}>
+          {message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

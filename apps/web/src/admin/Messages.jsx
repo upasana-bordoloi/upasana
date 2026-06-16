@@ -29,12 +29,13 @@ import {
   MarkEmailUnreadOutlined,
   MailOutline,
 } from '@mui/icons-material';
+import { useToastStore } from '../store/store.js';
 
 export default function Messages() {
   const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
   const [selectedId, setSelectedId] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
-  const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
   // Fetch messages
@@ -59,15 +60,19 @@ export default function Messages() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_read })
       });
-      if (!res.ok) throw new Error('Failed to update message status');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to update message status');
+      }
       return res.json();
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries(['adminMessages']);
-      setSuccessMsg(variables.is_read ? 'Marked message as read.' : 'Marked message as unread.');
+      showToast(variables.is_read ? 'Marked message as read.' : 'Marked message as unread.', 'success');
     },
     onError: (err) => {
       setErrorMsg(err.message || 'Operation failed');
+      showToast(err.message || 'Failed to update message.', 'error');
     }
   });
 
@@ -75,7 +80,10 @@ export default function Messages() {
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
       const res = await fetch(`/api/contact/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete message');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to delete message');
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -84,10 +92,11 @@ export default function Messages() {
         setSelectedId(null);
       }
       setDeleteId(null);
-      setSuccessMsg('Message deleted successfully.');
+      showToast('Message deleted successfully.', 'success');
     },
     onError: (err) => {
       setErrorMsg(err.message || 'Deletion failed');
+      showToast(err.message || 'Failed to delete message.', 'error');
     }
   });
 
@@ -330,17 +339,6 @@ export default function Messages() {
         </DialogActions>
       </Dialog>
 
-      {/* Toast Notifications */}
-      <Snackbar
-        open={!!successMsg}
-        autoHideDuration={4000}
-        onClose={() => setSuccessMsg('')}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert onClose={() => setSuccessMsg('')} severity="success" sx={{ width: '100%', borderRadius: 0 }}>
-          {successMsg}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 }

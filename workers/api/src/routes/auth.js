@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { sign, verify } from 'hono/jwt';
-import { setCookie, deleteCookie } from 'hono/cookie';
+import { setCookie, deleteCookie, getCookie } from 'hono/cookie';
 import { loginSchema, forgotPasswordSchema, resetPasswordSchema } from 'schemas';
 import { verifyPassword, hashPassword } from 'utils';
 import { requireAuth, logAudit } from '../middleware/auth.js';
@@ -75,9 +75,26 @@ authRouter.post('/login', async (c) => {
 });
 
 // POST /api/auth/logout
-authRouter.post('/logout', requireAuth(), async (c) => {
-  const user = c.get('user');
+authRouter.post('/logout', async (c) => {
   const db = c.env.DB;
+  
+  // Retrieve token if present to log audit activity
+  const authHeader = c.req.header('Authorization');
+  let token = '';
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.substring(7);
+  } else {
+    token = getCookie(c, 'token');
+  }
+  
+  let user = null;
+  if (token) {
+    try {
+      user = await verify(token, c.env.JWT_SECRET, 'HS256');
+    } catch (e) {
+      // Token expired or invalid, ignore
+    }
+  }
   
   // Delete cookie
   deleteCookie(c, 'token', {

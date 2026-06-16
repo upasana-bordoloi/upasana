@@ -45,6 +45,13 @@ app.onError((err, c) => {
     }, 400);
   }
   
+  if (err.message && (err.message.includes('FOREIGN KEY constraint failed') || err.message.includes('SQLITE_CONSTRAINT_FOREIGNKEY'))) {
+    return c.json({
+      success: false,
+      error: 'Cannot delete or modify this item because it is referenced by other records (such as customer orders).'
+    }, 409);
+  }
+  
   return c.json({
     success: false,
     error: err.message || 'Internal Server Error'

@@ -14,11 +14,13 @@ import {
   Alert,
   Divider,
   Snackbar,
+  CircularProgress,
 } from '@mui/material';
+import { useToastStore } from '../store/store.js';
 
 export default function SettingsManager() {
   const queryClient = useQueryClient();
-  const [successOpen, setSuccessOpen] = useState(false);
+  const { showToast } = useToastStore();
   const [errorMsg, setErrorMsg] = useState('');
 
   // Fetch settings
@@ -98,10 +100,11 @@ export default function SettingsManager() {
     onSuccess: () => {
       queryClient.invalidateQueries(['adminSettings']);
       queryClient.invalidateQueries(['settings']);
-      setSuccessOpen(true);
+      showToast('Site settings updated successfully!', 'success');
     },
     onError: (err) => {
       setErrorMsg(err.message || 'Failed to save settings');
+      showToast(err.message || 'Failed to save settings.', 'error');
     }
   });
 
@@ -125,7 +128,10 @@ export default function SettingsManager() {
       <Card sx={{ border: '1px solid #EBE6DF', borderRadius: 0, boxShadow: 'none' }}>
         <CardContent sx={{ p: 4 }}>
           {isLoading ? (
-            <Typography variant="body2" color="text.secondary">Loading settings data...</Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 4, gap: 2 }}>
+              <CircularProgress size={40} color="secondary" />
+              <Typography variant="body2" color="text.secondary">Loading settings data...</Typography>
+            </Box>
           ) : (
             <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
               <Grid container spacing={4}>
@@ -353,13 +359,6 @@ export default function SettingsManager() {
           )}
         </CardContent>
       </Card>
-
-      <Snackbar
-        open={successOpen}
-        autoHideDuration={4000}
-        onClose={() => setSuccessOpen(false)}
-        message="Site configuration updated successfully."
-      />
     </Box>
   );
 }

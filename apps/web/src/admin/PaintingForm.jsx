@@ -135,6 +135,17 @@ export default function PaintingForm() {
     }
   }, [isEdit, editingPainting, categoriesRes, collectionsRes, reset]);
 
+  if (isEdit && !editingPainting) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: 2 }}>
+        <CircularProgress size={50} color="primary" />
+        <Typography variant="body1" color="text.secondary">
+          Loading artwork details...
+        </Typography>
+      </Box>
+    );
+  }
+
   // Auto-generate slug from title
   useEffect(() => {
     if (!isEdit && watchTitle) {

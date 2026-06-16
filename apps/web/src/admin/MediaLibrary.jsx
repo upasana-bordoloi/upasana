@@ -27,13 +27,14 @@ import {
   ContentCopyOutlined,
   CloudUploadOutlined,
 } from '@mui/icons-material';
+import { useToastStore } from '../store/store.js';
 
 export default function MediaLibrary() {
   const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
   const [folder, setFolder] = useState('paintings');
   const [uploadFile, setUploadFile] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
   const [deleteId, setDeleteId] = useState(null);
 
   // Fetch media records
@@ -63,13 +64,14 @@ export default function MediaLibrary() {
     onSuccess: () => {
       queryClient.invalidateQueries(['adminMedia']);
       setUploadFile(null);
-      setSuccessMsg('Image uploaded successfully.');
+      showToast('Image uploaded successfully.', 'success');
       // Reset input element
       const fileInput = document.getElementById('media-upload-input');
       if (fileInput) fileInput.value = '';
     },
     onError: (err) => {
       setErrorMsg(err.message || 'File upload failed');
+      showToast(err.message || 'File upload failed.', 'error');
     }
   });
 
@@ -77,16 +79,20 @@ export default function MediaLibrary() {
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
       const res = await fetch(`/api/media/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Deletion failed');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Deletion failed');
+      }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminMedia']);
-      setSuccessMsg('Media deleted successfully.');
+      showToast('Media deleted successfully.', 'success');
       setDeleteId(null);
     },
     onError: (err) => {
       setErrorMsg(err.message || 'Deletion failed');
+      showToast(err.message || 'Deletion failed.', 'error');
       setDeleteId(null);
     }
   });
@@ -112,7 +118,7 @@ export default function MediaLibrary() {
 
   const copyToClipboard = (url) => {
     navigator.clipboard.writeText(url);
-    setSuccessMsg('Image URL copied to clipboard.');
+    showToast('Image URL copied to clipboard.', 'success');
   };
 
   return (
@@ -259,28 +265,6 @@ export default function MediaLibrary() {
         </DialogActions>
       </Dialog>
 
-      {/* Toast Notifications */}
-      <Snackbar
-        open={!!successMsg}
-        autoHideDuration={4000}
-        onClose={() => setSuccessMsg('')}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert onClose={() => setSuccessMsg('')} severity="success" sx={{ width: '100%', borderRadius: 0 }}>
-          {successMsg}
-        </Alert>
-      </Snackbar>
-
-      <Snackbar
-        open={!!errorMsg}
-        autoHideDuration={5000}
-        onClose={() => setErrorMsg('')}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert onClose={() => setErrorMsg('')} severity="error" sx={{ width: '100%', borderRadius: 0 }}>
-          {errorMsg}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 }

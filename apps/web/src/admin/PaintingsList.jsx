@@ -21,6 +21,7 @@ import {
   TextField,
   Alert,
   TablePagination,
+  CircularProgress,
 } from '@mui/material';
 import {
   EditOutlined,
@@ -30,9 +31,11 @@ import {
   CloudDownloadOutlined,
 } from '@mui/icons-material';
 import { formatPrice } from 'utils';
+import { useToastStore } from '../store/store.js';
 
 export default function PaintingsList() {
   const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
   const [deleteId, setDeleteId] = useState(null);
   const [importOpen, setImportOpen] = useState(false);
   const [importJson, setImportJson] = useState('');
@@ -76,13 +79,21 @@ export default function PaintingsList() {
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
       const res = await fetch(`/api/paintings/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Delete failed');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Delete failed');
+      }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminPaintingsList']);
       setDeleteId(null);
+      showToast('Painting deleted successfully!', 'success');
     },
+    onError: (err) => {
+      showToast(err.message || 'Failed to delete painting.', 'error');
+      setDeleteId(null);
+    }
   });
 
   // Duplicate/Copy Mutation
@@ -101,12 +112,19 @@ export default function PaintingsList() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(copy),
       });
-      if (!res.ok) throw new Error('Duplication failed');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Duplication failed');
+      }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminPaintingsList']);
+      showToast('Painting duplicated successfully!', 'success');
     },
+    onError: (err) => {
+      showToast(err.message || 'Failed to duplicate painting.', 'error');
+    }
   });
 
   // Bulk Import Mutation
@@ -117,17 +135,22 @@ export default function PaintingsList() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ paintings: list }),
       });
-      if (!res.ok) throw new Error('Bulk import failed');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Bulk import failed');
+      }
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries(['adminPaintingsList']);
       setImportOpen(false);
       setImportJson('');
       setImportError('');
+      showToast(data.message || 'Paintings imported successfully!', 'success');
     },
     onError: (err) => {
       setImportError(err.message || 'JSON parsing or database transaction failed');
+      showToast(err.message || 'Failed to import paintings.', 'error');
     },
   });
 
@@ -201,7 +224,12 @@ export default function PaintingsList() {
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
-                  Loading art database...
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                    <CircularProgress size={40} color="secondary" />
+                    <Typography variant="body2" color="text.secondary">
+                      Loading art database...
+                    </Typography>
+                  </Box>
                 </TableCell>
               </TableRow>
             ) : paintings.length === 0 ? (

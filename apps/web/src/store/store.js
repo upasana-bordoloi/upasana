@@ -46,3 +46,12 @@ export const useAuthStore = create(
     }
   )
 );
+
+// Toast Store for Global Notifications
+export const useToastStore = create((set) => ({
+  open: false,
+  message: '',
+  severity: 'success', // 'success' | 'error' | 'warning' | 'info'
+  showToast: (message, severity = 'success') => set({ open: true, message, severity }),
+  closeToast: () => set({ open: false })
+}));

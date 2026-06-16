@@ -19,6 +19,7 @@ export default function Login() {
   const navigate = useNavigate();
   const { user, setAuth } = useAuthStore();
   const [errorMsg, setErrorMsg] = useState('');
+  const [infoMsg, setInfoMsg] = useState('');
 
   // If already logged in, redirect straight to admin overview
   useEffect(() => {
@@ -26,6 +27,14 @@ export default function Login() {
       navigate('/admin');
     }
   }, [user, navigate]);
+
+  // Check if redirected from expired session
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('expired') === 'true') {
+      setInfoMsg('Your session has expired. Please log in again to continue.');
+    }
+  }, []);
 
   const {
     register,
@@ -88,6 +97,12 @@ export default function Login() {
           {errorMsg && (
             <Alert severity="error" sx={{ borderRadius: 0, mb: 3 }}>
               {errorMsg}
+            </Alert>
+          )}
+
+          {infoMsg && (
+            <Alert severity="info" sx={{ borderRadius: 0, mb: 3 }}>
+              {infoMsg}
             </Alert>
           )}
 

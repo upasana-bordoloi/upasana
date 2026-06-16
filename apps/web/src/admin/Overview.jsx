@@ -10,6 +10,7 @@ import {
   Button,
   Divider,
   Paper,
+  CircularProgress,
 } from '@mui/material';
 import {
   ColorLensOutlined,
@@ -35,11 +36,22 @@ export default function Overview() {
   const orders = ordersRes?.data || [];
 
   // Query audit logs
-  const { data: auditRes } = useQuery({
+  const { data: auditRes, isLoading: loadingLogs } = useQuery({
     queryKey: ['adminAuditLogs'],
     queryFn: () => fetch('/api/users/audit-logs/all').then(res => res.json())
   });
   const logs = auditRes?.data || [];
+
+  if (loadingPaintings || loadingOrders || loadingLogs) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: 2 }}>
+        <CircularProgress size={50} color="primary" />
+        <Typography variant="body1" color="text.secondary">
+          Loading dashboard metrics...
+        </Typography>
+      </Box>
+    );
+  }
 
   const totalPaintings = paintings.length;
   const publishedCount = paintings.filter(p => p.status === 'PUBLISHED').length;

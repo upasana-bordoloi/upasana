@@ -22,12 +22,15 @@ import {
   Divider,
   TablePagination,
   Grid,
+  CircularProgress,
 } from '@mui/material';
 import { RemoveRedEyeOutlined } from '@mui/icons-material';
 import { formatPrice } from 'utils';
+import { useToastStore } from '../store/store.js';
 
 export default function OrdersList() {
   const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [statusVal, setStatusVal] = useState('');
   const [paymentVal, setPaymentVal] = useState('');
@@ -74,26 +77,39 @@ export default function OrdersList() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, payment_status }),
       });
-      if (!res.ok) throw new Error('Failed to update status');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to update status');
+      }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminOrdersList']);
       setSelectedOrder(null);
+      showToast('Order status updated successfully!', 'success');
+    },
+    onError: (err) => {
+      showToast(err.message || 'Failed to update order.', 'error');
     }
   });
 
   const handleOpenDetails = async (id) => {
     try {
       const res = await fetch(`/api/orders/${id}`);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to retrieve order details.');
+      }
       const result = await res.json();
       if (result.success) {
         setSelectedOrder(result.data);
         setStatusVal(result.data.status);
         setPaymentVal(result.data.payment_status);
+      } else {
+        throw new Error(result.error || 'Failed to load details.');
       }
     } catch (e) {
-      console.error(e);
+      showToast(e.message || 'Error fetching order details.', 'error');
     }
   };
 
@@ -129,7 +145,12 @@ export default function OrdersList() {
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
-                  Loading order logs...
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                    <CircularProgress size={40} color="secondary" />
+                    <Typography variant="body2" color="text.secondary">
+                      Loading order logs...
+                    </Typography>
+                  </Box>
                 </TableCell>
               </TableRow>
             ) : orders.length === 0 ? (

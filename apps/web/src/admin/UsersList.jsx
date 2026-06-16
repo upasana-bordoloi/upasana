@@ -25,11 +25,14 @@ import {
   Alert,
   Switch,
   TablePagination,
+  CircularProgress,
 } from '@mui/material';
 import { DeleteOutlineOutlined } from '@mui/icons-material';
+import { useToastStore } from '../store/store.js';
 
 export default function UsersList() {
   const queryClient = useQueryClient();
+  const { showToast } = useToastStore();
   const [createOpen, setCreateOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -95,9 +98,11 @@ export default function UsersList() {
       queryClient.invalidateQueries(['adminUsersList']);
       setCreateOpen(false);
       reset();
+      showToast('Admin user created successfully!', 'success');
     },
     onError: (err) => {
       setErrorMsg(err.message || 'Operation failed');
+      showToast(err.message || 'Failed to create user.', 'error');
     }
   });
 
@@ -109,11 +114,18 @@ export default function UsersList() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_active })
       });
-      if (!res.ok) throw new Error('Toggle failed');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Toggle failed');
+      }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminUsersList']);
+      showToast('User activation status updated.', 'success');
+    },
+    onError: (err) => {
+      showToast(err.message || 'Failed to update user status.', 'error');
     }
   });
 
@@ -121,11 +133,18 @@ export default function UsersList() {
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
       const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete user');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to delete user');
+      }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminUsersList']);
+      showToast('Admin user deleted successfully.', 'success');
+    },
+    onError: (err) => {
+      showToast(err.message || 'Failed to delete user.', 'error');
     }
   });
 
@@ -171,7 +190,12 @@ export default function UsersList() {
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
-                  Loading staff registry...
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                    <CircularProgress size={40} color="secondary" />
+                    <Typography variant="body2" color="text.secondary">
+                      Loading staff registry...
+                    </Typography>
+                  </Box>
                 </TableCell>
               </TableRow>
             ) : (
