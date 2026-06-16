@@ -23,18 +23,19 @@ export default function About() {
   });
   const settings = settingsRes?.data || {};
 
-  const exhibitions = [
-    { year: '2026', title: 'Echoes of Light (Solo)', location: 'Modern Art Center, New York, NY' },
-    { year: '2025', title: 'Transitions in Blue (Group)', location: 'Metropolitan Artists Gallery, London' },
-    { year: '2024', title: 'Himalayan Whispers (Solo)', location: 'Nirvana Fine Arts, New Delhi' },
-    { year: '2023', title: 'The Florentine Studies (Group)', location: 'Palazzo Vecchio Gallery, Florence, Italy' },
-  ];
+  let exhibitions = [];
+  try {
+    exhibitions = JSON.parse(settings.about_exhibitions || '[]');
+  } catch (e) {
+    exhibitions = [];
+  }
 
-  const awards = [
-    { year: '2025', title: 'Outstanding Achievement in Oil Painting', organization: 'Fine Arts League of New York' },
-    { year: '2023', title: 'Florentine Residency Fellowship', organization: 'Tuscany Arts Commission' },
-    { year: '2022', title: 'Emerging Contemporary Landscape Artist Award', organization: 'Asian Arts Federation' },
-  ];
+  let awards = [];
+  try {
+    awards = JSON.parse(settings.about_awards || '[]');
+  } catch (e) {
+    awards = [];
+  }
 
   return (
     <Container maxWidth="lg" sx={{ py: 8 }}>
@@ -43,7 +44,7 @@ export default function About() {
         <Grid item xs={12} md={5}>
           <CardMedia
             component="img"
-            image="https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=800&q=80"
+            image={settings.about_image_url || "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=800&q=80"}
             alt="The Artist"
             sx={{
               width: '100%',
@@ -69,70 +70,77 @@ export default function About() {
         </Grid>
       </Grid>
 
-      <Divider sx={{ my: 8 }} />
-
       {/* Exhibitions & Awards lists */}
-      <Grid container spacing={8}>
-        {/* Exhibitions */}
-        <Grid item xs={12} md={6}>
-          <Typography variant="h3" sx={{ mb: 4 }}>
-            Exhibitions
-          </Typography>
-          <List disablePadding>
-            {exhibitions.map((ex, index) => (
-              <React.Fragment key={index}>
-                <ListItem sx={{ py: 2.5, px: 0 }}>
-                  <ListItemText
-                    primary={
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', mb: 0.5 }}>
-                        <Typography variant="subtitle1" fontWeight="600" color="primary">
-                          {ex.title}
-                        </Typography>
-                        <Typography variant="subtitle1" fontWeight="600" color="secondary">
-                          {ex.year}
-                        </Typography>
-                      </Box>
-                    }
-                    secondary={ex.location}
-                    secondaryTypographyProps={{ style: { color: '#6E6A64' } }}
-                  />
-                </ListItem>
-                {index < exhibitions.length - 1 && <Divider />}
-              </React.Fragment>
-            ))}
-          </List>
-        </Grid>
+      {(exhibitions.length > 0 || awards.length > 0) && (
+        <>
+          <Divider sx={{ my: 8 }} />
+          <Grid container spacing={8}>
+            {/* Exhibitions */}
+            {exhibitions.length > 0 && (
+              <Grid item xs={12} md={awards.length > 0 ? 6 : 12}>
+                <Typography variant="h3" sx={{ mb: 4 }}>
+                  Exhibitions
+                </Typography>
+                <List disablePadding>
+                  {exhibitions.map((ex, index) => (
+                    <React.Fragment key={index}>
+                      <ListItem sx={{ py: 2.5, px: 0 }}>
+                        <ListItemText
+                          primary={
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', mb: 0.5 }}>
+                              <Typography variant="subtitle1" fontWeight="600" color="primary">
+                                {ex.title}
+                              </Typography>
+                              <Typography variant="subtitle1" fontWeight="600" color="secondary">
+                                {ex.year}
+                              </Typography>
+                            </Box>
+                          }
+                          secondary={ex.location}
+                          secondaryTypographyProps={{ style: { color: '#6E6A64' } }}
+                        />
+                      </ListItem>
+                      {index < exhibitions.length - 1 && <Divider />}
+                    </React.Fragment>
+                  ))}
+                </List>
+              </Grid>
+            )}
 
-        {/* Awards */}
-        <Grid item xs={12} md={6}>
-          <Typography variant="h3" sx={{ mb: 4 }}>
-            Awards & Recognition
-          </Typography>
-          <List disablePadding>
-            {awards.map((aw, index) => (
-              <React.Fragment key={index}>
-                <ListItem sx={{ py: 2.5, px: 0 }}>
-                  <ListItemText
-                    primary={
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', mb: 0.5 }}>
-                        <Typography variant="subtitle1" fontWeight="600" color="primary">
-                          {aw.title}
-                        </Typography>
-                        <Typography variant="subtitle1" fontWeight="600" color="secondary">
-                          {aw.year}
-                        </Typography>
-                      </Box>
-                    }
-                    secondary={aw.organization}
-                    secondaryTypographyProps={{ style: { color: '#6E6A64' } }}
-                  />
-                </ListItem>
-                {index < awards.length - 1 && <Divider />}
-              </React.Fragment>
-            ))}
-          </List>
-        </Grid>
-      </Grid>
+            {/* Awards */}
+            {awards.length > 0 && (
+              <Grid item xs={12} md={exhibitions.length > 0 ? 6 : 12}>
+                <Typography variant="h3" sx={{ mb: 4 }}>
+                  Awards & Recognition
+                </Typography>
+                <List disablePadding>
+                  {awards.map((aw, index) => (
+                    <React.Fragment key={index}>
+                      <ListItem sx={{ py: 2.5, px: 0 }}>
+                        <ListItemText
+                          primary={
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', mb: 0.5 }}>
+                              <Typography variant="subtitle1" fontWeight="600" color="primary">
+                                {aw.title}
+                              </Typography>
+                              <Typography variant="subtitle1" fontWeight="600" color="secondary">
+                                {aw.year}
+                              </Typography>
+                            </Box>
+                          }
+                          secondary={aw.organization}
+                          secondaryTypographyProps={{ style: { color: '#6E6A64' } }}
+                        />
+                      </ListItem>
+                      {index < awards.length - 1 && <Divider />}
+                    </React.Fragment>
+                  ))}
+                </List>
+              </Grid>
+            )}
+          </Grid>
+        </>
+      )}
     </Container>
   );
 }

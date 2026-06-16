@@ -27,10 +27,14 @@ export default function Home() {
   });
   const settings = settingsRes?.data || {};
 
+  const featuredLimit = settings.featured_section_limit || '3';
+  const showFeatured = settings.featured_section_show !== '0';
+
   // Load featured paintings
   const { data: featuredRes } = useQuery({
-    queryKey: ['featuredPaintings'],
-    queryFn: () => fetch('/api/paintings?featured=true&limit=3').then(res => res.json())
+    queryKey: ['featuredPaintings', featuredLimit],
+    queryFn: () => fetch(`/api/paintings?featured=true&limit=${featuredLimit}`).then(res => res.json()),
+    enabled: Object.keys(settings).length > 0
   });
   const featuredPaintings = featuredRes?.data || [];
 
@@ -89,65 +93,67 @@ export default function Home() {
       </Box>
 
       {/* Featured Paintings Grid */}
-      <Container maxWidth="lg" sx={{ mb: 12 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 6 }}>
-          <Box>
-            <Typography variant="caption" color="secondary" sx={{ letterSpacing: '0.2em', fontWeight: 600, textTransform: 'uppercase' }}>
-              Handpicked Selection
-            </Typography>
-            <Typography variant="h2" sx={{ fontSize: { xs: '2rem', md: '2.8rem' }, mt: 1 }}>
-              Featured Works
-            </Typography>
-          </Box>
-          <Button component={RouterLink} to="/gallery" color="secondary" sx={{ fontWeight: 600 }}>
-            View All Paintings &rarr;
-          </Button>
-        </Box>
-
-        <Grid container spacing={4}>
-          {featuredPaintings.length === 0 ? (
-            <Grid item xs={12}>
-              <Typography variant="body1" align="center" color="text.secondary">
-                No featured paintings found. Check back soon!
+      {showFeatured && (
+        <Container maxWidth="lg" sx={{ mb: 12 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 6 }}>
+            <Box>
+              <Typography variant="caption" color="secondary" sx={{ letterSpacing: '0.2em', fontWeight: 600, textTransform: 'uppercase' }}>
+                {settings.featured_section_subtitle || 'Handpicked Selection'}
               </Typography>
-            </Grid>
-          ) : (
-            featuredPaintings.map((p) => (
-              <Grid item xs={12} sm={6} md={4} key={p.id}>
-                <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                  <CardMedia
-                    component="img"
-                    height="400"
-                    image={p.thumbnail_url || p.image_url || 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=600&q=80'}
-                    alt={p.title}
-                    sx={{ objectFit: 'cover' }}
-                  />
-                  <CardContent sx={{ flexGrow: 1, p: 3 }}>
-                    <Typography variant="h5" component={RouterLink} to={`/painting/${p.slug}`} sx={{ textDecoration: 'none', color: 'primary.main', '&:hover': { color: 'secondary.main' } }}>
-                      {p.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>
-                      {p.medium} — {p.width}&times;{p.height} in
-                    </Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}>
-                      <Typography variant="h6" color="primary" fontWeight="600">
-                        {p.availability === 'SOLD' ? (
-                          <Chip label="Sold" size="small" sx={{ borderRadius: 0 }} />
-                        ) : (
-                          formatPrice(p.price)
-                        )}
-                      </Typography>
-                      <Button size="small" component={RouterLink} to={`/painting/${p.slug}`}>
-                        Details
-                      </Button>
-                    </Box>
-                  </CardContent>
-                </Card>
+              <Typography variant="h2" sx={{ fontSize: { xs: '2rem', md: '2.8rem' }, mt: 1 }}>
+                {settings.featured_section_title || 'Featured Works'}
+              </Typography>
+            </Box>
+            <Button component={RouterLink} to="/gallery" color="secondary" sx={{ fontWeight: 600 }}>
+              View All Paintings &rarr;
+            </Button>
+          </Box>
+
+          <Grid container spacing={4}>
+            {featuredPaintings.length === 0 ? (
+              <Grid item xs={12}>
+                <Typography variant="body1" align="center" color="text.secondary">
+                  No featured paintings found. Check back soon!
+                </Typography>
               </Grid>
-            ))
-          )}
-        </Grid>
-      </Container>
+            ) : (
+              featuredPaintings.map((p) => (
+                <Grid item xs={12} sm={6} md={4} key={p.id}>
+                  <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                    <CardMedia
+                      component="img"
+                      height="400"
+                      image={p.thumbnail_url || p.image_url || 'https://images.unsplash.com/photo-1579783928621-7a13d66a62d1?auto=format&fit=crop&w=600&q=80'}
+                      alt={p.title}
+                      sx={{ objectFit: 'cover' }}
+                    />
+                    <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                      <Typography variant="h5" component={RouterLink} to={`/painting/${p.slug}`} sx={{ textDecoration: 'none', color: 'primary.main', '&:hover': { color: 'secondary.main' } }}>
+                        {p.title}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>
+                        {p.medium} — {p.width}&times;{p.height} in
+                      </Typography>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}>
+                        <Typography variant="h6" color="primary" fontWeight="600">
+                          {p.availability === 'SOLD' ? (
+                            <Chip label="Sold" size="small" sx={{ borderRadius: 0 }} />
+                          ) : (
+                            formatPrice(p.price)
+                          )}
+                        </Typography>
+                        <Button size="small" component={RouterLink} to={`/painting/${p.slug}`}>
+                          Details
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))
+            )}
+          </Grid>
+        </Container>
+      )}
 
       {/* Narrative Split Intro Section */}
       <Box sx={{ backgroundColor: '#FAF8F5', py: 12, borderTop: '1px solid #EBE6DF', borderBottom: '1px solid #EBE6DF', mb: 12 }}>
@@ -171,7 +177,7 @@ export default function Home() {
               >
                 <CardMedia
                   component="img"
-                  image="https://images.unsplash.com/photo-1579783928621-7a13d66a62d1?auto=format&fit=crop&w=600&q=80"
+                  image={settings.meet_artist_image_url || "https://images.unsplash.com/photo-1579783928621-7a13d66a62d1?auto=format&fit=crop&w=600&q=80"}
                   alt="Artist Studio"
                   sx={{ width: '100%', height: 450, objectFit: 'cover', position: 'relative', zIndex: 2 }}
                 />

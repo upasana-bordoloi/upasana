@@ -111,7 +111,15 @@ export const siteSettingsSchema = z.object({
   pagination_limit_gallery: z.string().regex(/^\d+$/, 'Must be a positive number').optional().nullable(),
   pagination_limit_admin_paintings: z.string().regex(/^\d+$/, 'Must be a positive number').optional().nullable(),
   pagination_limit_admin_orders: z.string().regex(/^\d+$/, 'Must be a positive number').optional().nullable(),
-  pagination_limit_admin_users: z.string().regex(/^\d+$/, 'Must be a positive number').optional().nullable()
+  pagination_limit_admin_users: z.string().regex(/^\d+$/, 'Must be a positive number').optional().nullable(),
+  about_exhibitions: z.string().optional().nullable(),
+  about_awards: z.string().optional().nullable(),
+  about_image_url: z.string().url().or(z.literal('')).optional().nullable(),
+  meet_artist_image_url: z.string().url().or(z.literal('')).optional().nullable(),
+  featured_section_show: z.string().optional().nullable(),
+  featured_section_title: z.string().optional().nullable(),
+  featured_section_subtitle: z.string().optional().nullable(),
+  featured_section_limit: z.string().regex(/^\d+$/, 'Must be a positive number').optional().nullable()
 });
 
 // Contact Form Validation
