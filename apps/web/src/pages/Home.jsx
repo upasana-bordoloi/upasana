@@ -206,7 +206,7 @@ export default function Home() {
   // Load featured paintings
   const { data: featuredRes } = useQuery({
     queryKey: ['featuredPaintings', featuredLimit],
-    queryFn: () => fetch(`/api/paintings?featured=true&limit=${featuredLimit}`).then(res => res.json()),
+    queryFn: () => fetch(`/api/paintings?featured=true&status=PUBLISHED&limit=${featuredLimit}`).then(res => res.json()),
     enabled: Object.keys(settings).length > 0
   });
   const featuredPaintings = featuredRes?.data || [];

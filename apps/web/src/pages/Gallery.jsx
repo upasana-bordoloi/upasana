@@ -56,6 +56,7 @@ export default function Gallery() {
       const url = new URL('/api/paintings', window.location.origin);
       url.searchParams.set('page', String(page));
       url.searchParams.set('limit', String(limit));
+      url.searchParams.set('status', 'PUBLISHED');
       if (search) url.searchParams.set('search', search);
       if (medium) url.searchParams.set('medium', medium);
       if (availability) url.searchParams.set('availability', availability);

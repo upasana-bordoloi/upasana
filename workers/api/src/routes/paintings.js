@@ -43,7 +43,7 @@ paintingsRouter.get('/', async (c) => {
     }
   }
   
-  const statusFilter = searchParams.get('status') || (isAdmin ? '' : 'PUBLISHED');
+  const statusFilter = searchParams.get('status');
   
   const sort = searchParams.get('sort') || 'newest'; // newest, price-asc, price-desc, title-asc
   
@@ -65,6 +65,12 @@ paintingsRouter.get('/', async (c) => {
   if (statusFilter) {
     query += ` AND p.status = ? `;
     params.push(statusFilter);
+  } else {
+    if (isAdmin) {
+      query += ` AND p.status != 'ARCHIVED' `;
+    } else {
+      query += ` AND p.status = 'PUBLISHED' `;
+    }
   }
   if (search) {
     query += ` AND (p.title LIKE ? OR p.description LIKE ? OR p.story LIKE ?) `;
@@ -146,6 +152,12 @@ paintingsRouter.get('/', async (c) => {
   if (statusFilter) {
     countQuery += ` AND p.status = ? `;
     countParams.push(statusFilter);
+  } else {
+    if (isAdmin) {
+      countQuery += ` AND p.status != 'ARCHIVED' `;
+    } else {
+      countQuery += ` AND p.status = 'PUBLISHED' `;
+    }
   }
   if (search) {
     countQuery += ` AND (p.title LIKE ? OR p.description LIKE ? OR p.story LIKE ?) `;
@@ -350,6 +362,27 @@ paintingsRouter.get('/:slug', async (c) => {
   const db = c.env.DB;
   const slug = c.req.param('slug');
   
+  // Role checking for unpublished status
+  const authHeader = c.req.header('Authorization');
+  let token = '';
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.substring(7);
+  } else {
+    token = getCookie(c, 'token');
+  }
+
+  let isAdmin = false;
+  if (token) {
+    try {
+      const decoded = await verify(token, c.env.JWT_SECRET, 'HS256');
+      if (decoded && ['SUPER_ADMIN', 'ADMIN', 'EDITOR'].includes(decoded.role)) {
+        isAdmin = true;
+      }
+    } catch (e) {
+      // Invalid or expired token
+    }
+  }
+  
   const painting = await db.prepare(`
     SELECT p.*,
            c.id as category_id, c.name as category_name, c.slug as category_slug,
@@ -363,7 +396,7 @@ paintingsRouter.get('/:slug', async (c) => {
     LIMIT 1
   `).bind(slug).first();
   
-  if (!painting) {
+  if (!painting || painting.status === 'ARCHIVED' || (painting.status === 'DRAFT' && !isAdmin)) {
     return c.json({ success: false, error: 'Painting not found' }, 404);
   }
   
