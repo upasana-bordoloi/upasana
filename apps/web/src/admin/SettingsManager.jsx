@@ -49,8 +49,15 @@ export default function SettingsManager() {
   const [newAwTitle, setNewAwTitle] = useState('');
   const [newAwOrg, setNewAwOrg] = useState('');
 
+  // Hero carousel slides management states
+  const [heroSlidesList, setHeroSlidesList] = useState([]);
+  const [newSlideTitle, setNewSlideTitle] = useState('');
+  const [newSlideSubtitle, setNewSlideSubtitle] = useState('');
+  const [newSlideImageUrl, setNewSlideImageUrl] = useState('');
+  const [newSlideLinkUrl, setNewSlideLinkUrl] = useState('');
+
   // Media picker states
-  const [mediaTarget, setMediaTarget] = useState(null); // 'about_image_url' or 'meet_artist_image_url'
+  const [mediaTarget, setMediaTarget] = useState(null); // 'about_image_url', 'meet_artist_image_url', or 'hero_slide_image'
   const [mediaList, setMediaList] = useState([]);
 
   // Fetch settings
@@ -93,7 +100,8 @@ export default function SettingsManager() {
       featured_section_show: '1',
       featured_section_title: 'Featured Works',
       featured_section_subtitle: 'Handpicked Selection',
-      featured_section_limit: '3'
+      featured_section_limit: '3',
+      hero_slides: '[]'
     }
   });
 
@@ -124,10 +132,11 @@ export default function SettingsManager() {
         featured_section_show: settings.featured_section_show || '1',
         featured_section_title: settings.featured_section_title || 'Featured Works',
         featured_section_subtitle: settings.featured_section_subtitle || 'Handpicked Selection',
-        featured_section_limit: settings.featured_section_limit || '3'
+        featured_section_limit: settings.featured_section_limit || '3',
+        hero_slides: settings.hero_slides || '[]'
       });
 
-      // Parse Exhibitions & Awards
+      // Parse Exhibitions & Awards & Custom Slides
       let parsedEx = [];
       try {
         parsedEx = JSON.parse(settings.about_exhibitions || '[]');
@@ -143,6 +152,14 @@ export default function SettingsManager() {
         parsedAw = [];
       }
       setAwardsList(parsedAw);
+
+      let parsedSlides = [];
+      try {
+        parsedSlides = JSON.parse(settings.hero_slides || '[]');
+      } catch (e) {
+        parsedSlides = [];
+      }
+      setHeroSlidesList(parsedSlides);
     }
   }, [settings, reset]);
 
@@ -199,8 +216,35 @@ export default function SettingsManager() {
       setValue('about_image_url', url);
     } else if (mediaTarget === 'meet_artist_image_url') {
       setValue('meet_artist_image_url', url);
+    } else if (mediaTarget === 'hero_slide_image') {
+      setNewSlideImageUrl(url);
     }
     setMediaTarget(null);
+  };
+
+  const handleAddHeroSlide = () => {
+    if (newSlideImageUrl.trim()) {
+      setHeroSlidesList([
+        ...heroSlidesList,
+        {
+          id: crypto.randomUUID ? crypto.randomUUID() : String(Math.random()),
+          title: newSlideTitle.trim(),
+          subtitle: newSlideSubtitle.trim(),
+          image_url: newSlideImageUrl.trim(),
+          link_url: newSlideLinkUrl.trim()
+        }
+      ]);
+      setNewSlideTitle('');
+      setNewSlideSubtitle('');
+      setNewSlideImageUrl('');
+      setNewSlideLinkUrl('');
+    } else {
+      showToast('Image URL is required for hero slides.', 'warning');
+    }
+  };
+
+  const handleRemoveHeroSlide = (index) => {
+    setHeroSlidesList(heroSlidesList.filter((_, i) => i !== index));
   };
 
   // Update mutation
@@ -234,6 +278,7 @@ export default function SettingsManager() {
       ...data,
       about_exhibitions: JSON.stringify(exhibitionsList),
       about_awards: JSON.stringify(awardsList),
+      hero_slides: JSON.stringify(heroSlidesList),
     };
     mutation.mutate(payload);
   };
@@ -285,6 +330,124 @@ export default function SettingsManager() {
                       />
                     </Grid>
                   </Grid>
+                </Grid>
+
+                {/* Custom Hero Slides */}
+                <Grid item xs={12}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Hero Carousel Custom Slides</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Add custom slides to the Home Page Hero Carousel. If custom slides are defined, they will replace the featured paintings slideshow.
+                  </Typography>
+                  
+                  <Paper sx={{ p: 3, border: '1px solid #EBE6DF', boxShadow: 'none', mb: 3, borderRadius: 0 }}>
+                    <Grid container spacing={2} alignItems="center">
+                      <Grid item xs={12} sm={4}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Slide Title"
+                          placeholder="e.g. Autumn Whispers"
+                          value={newSlideTitle}
+                          onChange={(e) => setNewSlideTitle(e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={8}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Slide Subtitle / Concept"
+                          placeholder="e.g. Original oil paintings studying autumn light..."
+                          value={newSlideSubtitle}
+                          onChange={(e) => setNewSlideSubtitle(e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={8}>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="Image URL"
+                            placeholder="https://..."
+                            value={newSlideImageUrl}
+                            onChange={(e) => setNewSlideImageUrl(e.target.value)}
+                          />
+                          <Button variant="outlined" size="small" onClick={() => openMediaLibrary('hero_slide_image')} sx={{ minWidth: 40, p: 0 }}>
+                            <ImageOutlined />
+                          </Button>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={12} sm={4}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Link URL (Optional)"
+                          placeholder="/gallery or /painting/..."
+                          value={newSlideLinkUrl}
+                          onChange={(e) => setNewSlideLinkUrl(e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Button
+                          variant="outlined"
+                          startIcon={<AddOutlined />}
+                          onClick={handleAddHeroSlide}
+                          fullWidth
+                        >
+                          Add Slide to Carousel
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+
+                  <TableContainer component={Paper} sx={{ maxHeight: 300, border: '1px solid #EBE6DF', boxShadow: 'none', borderRadius: 0 }}>
+                    <Table size="small" stickyHeader>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell sx={{ width: '15%' }}>Preview</TableCell>
+                          <TableCell sx={{ width: '25%' }}>Title / Subtitle</TableCell>
+                          <TableCell>Link</TableCell>
+                          <TableCell align="right" sx={{ width: '15%' }}>Action</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {heroSlidesList.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                              No custom slides added yet. Using default fallback / featured paintings instead.
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          heroSlidesList.map((slide, idx) => (
+                            <TableRow key={slide.id || idx}>
+                              <TableCell>
+                                <img
+                                  src={slide.image_url}
+                                  alt={slide.title}
+                                  style={{ width: 60, height: 40, objectFit: 'cover', border: '1px solid #EBE6DF' }}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="body2" fontWeight="600">{slide.title || 'Untitled'}</Typography>
+                                <Typography variant="caption" color="text.secondary" display="block" sx={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: 200 }}>
+                                  {slide.subtitle}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="caption" sx={{ fontStyle: 'italic' }}>
+                                  {slide.link_url || 'Default Gallery Link'}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="right">
+                                <IconButton size="small" color="error" onClick={() => handleRemoveHeroSlide(idx)}>
+                                  <DeleteOutlineOutlined fontSize="small" />
+                                </IconButton>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
                 </Grid>
 
                 <Grid item xs={12}><Divider /></Grid>

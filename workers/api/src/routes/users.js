@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { userSchema } from 'schemas';
-import { hashPassword } from 'utils';
+import { hashPassword, getPaginationParams } from 'utils';
 import { requireAuth, logAudit } from '../middleware/auth.js';
 
 export const usersRouter = new Hono();
@@ -189,12 +189,50 @@ usersRouter.delete('/:id', requireAuth(['SUPER_ADMIN']), async (c) => {
 // GET /api/users/audit-logs - View administrative system logs (RBAC: SUPER_ADMIN, ADMIN)
 usersRouter.get('/audit-logs/all', requireAuth(['SUPER_ADMIN', 'ADMIN']), async (c) => {
   const db = c.env.DB;
-  
-  const logs = await db.prepare(`
+  const { page, limit, offset } = getPaginationParams(c.req.url);
+  const searchParams = new URL(c.req.url).searchParams;
+  const startDate = searchParams.get('startDate');
+  const endDate = searchParams.get('endDate');
+
+  let query = `
     SELECT * FROM audit_logs
-    ORDER BY created_at DESC
-    LIMIT 200
-  `).all();
-  
-  return c.json({ success: true, data: logs.results });
+    WHERE 1=1
+  `;
+  let countQuery = `
+    SELECT COUNT(*) as total FROM audit_logs
+    WHERE 1=1
+  `;
+  const params = [];
+  const countParams = [];
+
+  if (startDate) {
+    query += ` AND created_at >= ? `;
+    params.push(startDate + ' 00:00:00');
+    countQuery += ` AND created_at >= ? `;
+    countParams.push(startDate + ' 00:00:00');
+  }
+  if (endDate) {
+    query += ` AND created_at <= ? `;
+    params.push(endDate + ' 23:59:59');
+    countQuery += ` AND created_at <= ? `;
+    countParams.push(endDate + ' 23:59:59');
+  }
+
+  query += ` ORDER BY created_at DESC LIMIT ? OFFSET ? `;
+  params.push(limit, offset);
+
+  const logs = await db.prepare(query).bind(...params).all();
+  const countResult = await db.prepare(countQuery).bind(...countParams).first();
+  const total = countResult ? countResult.total : 0;
+
+  return c.json({
+    success: true,
+    data: logs.results,
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit)
+    }
+  });
 });

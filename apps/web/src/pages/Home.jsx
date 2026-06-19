@@ -199,6 +199,14 @@ export default function Home() {
     queryFn: () => fetch('/api/settings').then(res => res.json())
   });
   const settings = settingsRes?.data || {};
+    // Parse custom hero slides from site settings (JSON string)
+    let heroSlides = [];
+    try {
+      heroSlides = JSON.parse(settings.hero_slides || '[]');
+    } catch (e) {
+      console.error('Failed to parse hero_slides:', e);
+      heroSlides = [];
+    }
 
   const featuredLimit = settings.featured_section_limit || '3';
   const showFeatured = settings.featured_section_show !== '0';
@@ -218,24 +226,6 @@ export default function Home() {
   });
   const categories = categoriesRes?.data || [];
 
-  // Auto-play hero slider
-  useEffect(() => {
-    if (featuredPaintings.length > 1) {
-      const interval = setInterval(() => {
-        setActiveSlide((prev) => (prev + 1) % featuredPaintings.length);
-      }, 6000);
-      return () => clearInterval(interval);
-    }
-  }, [featuredPaintings]);
-
-  const handleNextSlide = () => {
-    setActiveSlide((prev) => (prev + 1) % featuredPaintings.length);
-  };
-
-  const handlePrevSlide = () => {
-    setActiveSlide((prev) => (prev - 1 + featuredPaintings.length) % featuredPaintings.length);
-  };
-
   // Fallback defaults for Hero Slides if no featured paintings
   const defaultSlides = [
     {
@@ -246,7 +236,7 @@ export default function Home() {
     }
   ];
 
-  const slides = featuredPaintings.length > 0 ? featuredPaintings : defaultSlides;
+  const slides = (heroSlides && heroSlides.length > 0) ? heroSlides : (featuredPaintings.length > 0 ? featuredPaintings : defaultSlides);
   const currentSlide = slides[activeSlide] || slides[0];
 
   return (

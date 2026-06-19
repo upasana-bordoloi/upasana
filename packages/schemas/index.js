@@ -121,7 +121,8 @@ export const siteSettingsSchema = z.object({
   featured_section_show: z.string().optional().nullable(),
   featured_section_title: z.string().optional().nullable(),
   featured_section_subtitle: z.string().optional().nullable(),
-  featured_section_limit: z.string().regex(/^\d+$/, 'Must be a positive number').optional().nullable()
+  featured_section_limit: z.string().regex(/^\d+$/, 'Must be a positive number').optional().nullable(),
+  hero_slides: z.string().optional().nullable()
 });
 
 // Contact Form Validation

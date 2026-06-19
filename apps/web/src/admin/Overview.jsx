@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import dayjs from 'dayjs';
 import {
   Grid,
   Box,
@@ -11,6 +12,8 @@ import {
   Divider,
   Paper,
   CircularProgress,
+  TablePagination,
+  TextField,
 } from '@mui/material';
 import {
   ColorLensOutlined,
@@ -21,6 +24,14 @@ import {
 import { formatPrice } from 'utils';
 
 export default function Overview() {
+  const [hasRequested, setHasRequested] = useState(false);
+  const [logsPage, setLogsPage] = useState(0);
+  const [logsRowsPerPage, setLogsRowsPerPage] = useState(10);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [appliedStartDate, setAppliedStartDate] = useState('');
+  const [appliedEndDate, setAppliedEndDate] = useState('');
+
   // Query all paintings (to compute stats)
   const { data: paintingsRes, isLoading: loadingPaintings } = useQuery({
     queryKey: ['adminPaintingsAll'],
@@ -37,12 +48,41 @@ export default function Overview() {
 
   // Query audit logs
   const { data: auditRes, isLoading: loadingLogs } = useQuery({
-    queryKey: ['adminAuditLogs'],
-    queryFn: () => fetch('/api/users/audit-logs/all').then(res => res.json())
+    queryKey: ['adminAuditLogs', logsPage, logsRowsPerPage, appliedStartDate, appliedEndDate],
+    queryFn: () => {
+      const url = new URL('/api/users/audit-logs/all', window.location.origin);
+      url.searchParams.set('page', String(logsPage + 1));
+      url.searchParams.set('limit', String(logsRowsPerPage));
+      if (appliedStartDate) url.searchParams.set('startDate', appliedStartDate);
+      if (appliedEndDate) url.searchParams.set('endDate', appliedEndDate);
+      return fetch(url.toString()).then(res => res.json());
+    },
+    enabled: hasRequested
   });
   const logs = auditRes?.data || [];
+  const totalLogs = auditRes?.pagination?.total || 0;
 
-  if (loadingPaintings || loadingOrders || loadingLogs) {
+  const handleFetchLogs = () => {
+    if (startDate && endDate && dayjs(startDate).isAfter(dayjs(endDate))) {
+      alert('Start date cannot be after end date');
+      return;
+    }
+    setAppliedStartDate(startDate);
+    setAppliedEndDate(endDate);
+    setLogsPage(0);
+    setHasRequested(true);
+  };
+
+  const handleLogsPageChange = (event, newPage) => {
+    setLogsPage(newPage);
+  };
+
+  const handleLogsRowsPerPageChange = (event) => {
+    setLogsRowsPerPage(parseInt(event.target.value, 10));
+    setLogsPage(0);
+  };
+
+  if (loadingPaintings || loadingOrders) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: 2 }}>
         <CircularProgress size={50} color="primary" />
@@ -136,33 +176,83 @@ export default function Overview() {
             <Typography variant="h6" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 600, mb: 3 }}>
               Staff Activity Logs
             </Typography>
-            <Box sx={{ maxHeight: 350, overflowY: 'auto' }}>
-              {logs.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  No administrative actions logged yet.
-                </Typography>
+
+            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+              <TextField
+                label="Start Date"
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                size="small"
+              />
+              <TextField
+                label="End Date"
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                size="small"
+              />
+              <Button variant="contained" onClick={handleFetchLogs} size="medium">
+                Fetch Logs
+              </Button>
+            </Box>
+
+            <Box sx={{ minHeight: 200, display: 'flex', flexDirection: 'column' }}>
+              {loadingLogs ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 6, flexGrow: 1 }}>
+                  <CircularProgress size={30} color="secondary" />
+                </Box>
+              ) : !hasRequested ? (
+                <Box sx={{ py: 6, textAlign: 'center', flexGrow: 1 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Select a date range (optional) and click "Fetch Logs" to view system activity.
+                  </Typography>
+                </Box>
+              ) : logs.length === 0 ? (
+                <Box sx={{ py: 6, textAlign: 'center', flexGrow: 1 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    No administrative actions found for the selected criteria.
+                  </Typography>
+                </Box>
               ) : (
-                logs.map((log) => (
-                  <Box key={log.id} sx={{ mb: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="subtitle2" fontWeight="600" color="primary">
-                        {log.user_email || 'System'}
+                <Box sx={{ maxHeight: 350, overflowY: 'auto', flexGrow: 1, pr: 1 }}>
+                  {logs.map((log) => (
+                    <Box key={log.id} sx={{ mb: 2 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="subtitle2" fontWeight="600" color="primary">
+                          {log.user_email || 'System'}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {new Date(log.created_at).toLocaleString()}
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2" color="text.secondary">
+                        Action: <strong>{log.action}</strong> {log.entity_type ? `on ${log.entity_type} (${log.entity_id})` : ''}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {new Date(log.created_at).toLocaleString()}
-                      </Typography>
+                      {log.details && (
+                        <Typography variant="caption" display="block" sx={{ fontStyle: 'italic', color: '#8E8A84' }}>
+                          Details: {log.details}
+                        </Typography>
+                      )}
+                      <Divider sx={{ mt: 1.5 }} />
                     </Box>
-                    <Typography variant="body2" color="text.secondary">
-                      Action: <strong>{log.action}</strong> {log.entity_type ? `on ${log.entity_type} (${log.entity_id})` : ''}
-                    </Typography>
-                    {log.details && (
-                      <Typography variant="caption" display="block" sx={{ fontStyle: 'italic', color: '#8E8A84' }}>
-                        Details: {log.details}
-                      </Typography>
-                    )}
-                    <Divider sx={{ mt: 1.5 }} />
-                  </Box>
-                ))
+                  ))}
+                </Box>
+              )}
+
+              {hasRequested && logs.length > 0 && (
+                <TablePagination
+                  component="div"
+                  count={totalLogs}
+                  page={logsPage}
+                  onPageChange={handleLogsPageChange}
+                  rowsPerPage={logsRowsPerPage}
+                  onRowsPerPageChange={handleLogsRowsPerPageChange}
+                  rowsPerPageOptions={[5, 10, 25, 50]}
+                  sx={{ borderTop: '1px solid #EBE6DF', mt: 2 }}
+                />
               )}
             </Box>
           </Paper>
