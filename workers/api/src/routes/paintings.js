@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { verify } from 'hono/jwt';
 import { getCookie } from 'hono/cookie';
-import { paintingSchema } from 'schemas';
+import { paintingSchema, categorySchema, collectionSchema } from 'schemas';
 import { slugify, getPaginationParams } from 'utils';
 import { requireAuth, logAudit } from '../middleware/auth.js';
 
@@ -207,6 +207,142 @@ paintingsRouter.get('/collections', async (c) => {
   const db = c.env.DB;
   const collections = await db.prepare('SELECT * FROM collections ORDER BY name ASC').all();
   return c.json({ success: true, data: collections.results });
+});
+
+// POST /api/paintings/categories - Create Category (RBAC: SUPER_ADMIN, ADMIN)
+paintingsRouter.post('/categories', requireAuth(['SUPER_ADMIN', 'ADMIN']), async (c) => {
+  const db = c.env.DB;
+  const body = await c.req.json();
+  if (!body.slug && body.name) {
+    body.slug = slugify(body.name);
+  }
+  const result = categorySchema.safeParse(body);
+  if (!result.success) {
+    return c.json({ success: false, error: 'Validation failed', details: result.error.issues }, 400);
+  }
+  const { slug, name, description, images } = result.data;
+  const id = result.data.id || crypto.randomUUID();
+
+  await db.prepare(`
+    INSERT INTO categories (id, slug, name, description, images)
+    VALUES (?, ?, ?, ?, ?)
+  `).bind(id, slug, name, description || null, images || null).run();
+
+  return c.json({ success: true, message: 'Category created successfully', data: { id, slug, name, description, images } });
+});
+
+// PUT /api/paintings/categories/:id - Update Category (RBAC: SUPER_ADMIN, ADMIN)
+paintingsRouter.put('/categories/:id', requireAuth(['SUPER_ADMIN', 'ADMIN']), async (c) => {
+  const db = c.env.DB;
+  const id = c.req.param('id');
+  const body = await c.req.json();
+  if (!body.slug && body.name) {
+    body.slug = slugify(body.name);
+  }
+  const result = categorySchema.safeParse({ ...body, id });
+  if (!result.success) {
+    return c.json({ success: false, error: 'Validation failed', details: result.error.issues }, 400);
+  }
+  const { slug, name, description, images } = result.data;
+
+  const existing = await db.prepare('SELECT id FROM categories WHERE id = ?').bind(id).first();
+  if (!existing) {
+    return c.json({ success: false, error: 'Category not found' }, 404);
+  }
+
+  await db.prepare(`
+    UPDATE categories
+    SET slug = ?, name = ?, description = ?, images = ?
+    WHERE id = ?
+  `).bind(slug, name, description || null, images || null, id).run();
+
+  return c.json({ success: true, message: 'Category updated successfully', data: { id, slug, name, description, images } });
+});
+
+// DELETE /api/paintings/categories/:id - Delete Category (RBAC: SUPER_ADMIN, ADMIN)
+paintingsRouter.delete('/categories/:id', requireAuth(['SUPER_ADMIN', 'ADMIN']), async (c) => {
+  const db = c.env.DB;
+  const id = c.req.param('id');
+
+  const existing = await db.prepare('SELECT name FROM categories WHERE id = ?').bind(id).first();
+  if (!existing) {
+    return c.json({ success: false, error: 'Category not found' }, 404);
+  }
+
+  await db.batch([
+    db.prepare(`DELETE FROM painting_categories WHERE category_id = ?`).bind(id),
+    db.prepare(`DELETE FROM categories WHERE id = ?`).bind(id)
+  ]);
+
+  return c.json({ success: true, message: 'Category deleted successfully' });
+});
+
+// POST /api/paintings/collections - Create Collection (RBAC: SUPER_ADMIN, ADMIN)
+paintingsRouter.post('/collections', requireAuth(['SUPER_ADMIN', 'ADMIN']), async (c) => {
+  const db = c.env.DB;
+  const body = await c.req.json();
+  if (!body.slug && body.name) {
+    body.slug = slugify(body.name);
+  }
+  const result = collectionSchema.safeParse(body);
+  if (!result.success) {
+    return c.json({ success: false, error: 'Validation failed', details: result.error.issues }, 400);
+  }
+  const { slug, name, description, image_url } = result.data;
+  const id = result.data.id || crypto.randomUUID();
+
+  await db.prepare(`
+    INSERT INTO collections (id, slug, name, description, image_url)
+    VALUES (?, ?, ?, ?, ?)
+  `).bind(id, slug, name, description || null, image_url || null).run();
+
+  return c.json({ success: true, message: 'Collection created successfully', data: { id, slug, name, description, image_url } });
+});
+
+// PUT /api/paintings/collections/:id - Update Collection (RBAC: SUPER_ADMIN, ADMIN)
+paintingsRouter.put('/collections/:id', requireAuth(['SUPER_ADMIN', 'ADMIN']), async (c) => {
+  const db = c.env.DB;
+  const id = c.req.param('id');
+  const body = await c.req.json();
+  if (!body.slug && body.name) {
+    body.slug = slugify(body.name);
+  }
+  const result = collectionSchema.safeParse({ ...body, id });
+  if (!result.success) {
+    return c.json({ success: false, error: 'Validation failed', details: result.error.issues }, 400);
+  }
+  const { slug, name, description, image_url } = result.data;
+
+  const existing = await db.prepare('SELECT id FROM collections WHERE id = ?').bind(id).first();
+  if (!existing) {
+    return c.json({ success: false, error: 'Collection not found' }, 404);
+  }
+
+  await db.prepare(`
+    UPDATE collections
+    SET slug = ?, name = ?, description = ?, image_url = ?
+    WHERE id = ?
+  `).bind(slug, name, description || null, image_url || null, id).run();
+
+  return c.json({ success: true, message: 'Collection updated successfully', data: { id, slug, name, description, image_url } });
+});
+
+// DELETE /api/paintings/collections/:id - Delete Collection (RBAC: SUPER_ADMIN, ADMIN)
+paintingsRouter.delete('/collections/:id', requireAuth(['SUPER_ADMIN', 'ADMIN']), async (c) => {
+  const db = c.env.DB;
+  const id = c.req.param('id');
+
+  const existing = await db.prepare('SELECT name FROM collections WHERE id = ?').bind(id).first();
+  if (!existing) {
+    return c.json({ success: false, error: 'Collection not found' }, 404);
+  }
+
+  await db.batch([
+    db.prepare(`DELETE FROM painting_collections WHERE collection_id = ?`).bind(id),
+    db.prepare(`DELETE FROM collections WHERE id = ?`).bind(id)
+  ]);
+
+  return c.json({ success: true, message: 'Collection deleted successfully' });
 });
 
 // GET /api/paintings/:slug - Single Painting details

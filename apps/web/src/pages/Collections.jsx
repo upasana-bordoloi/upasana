@@ -10,32 +10,16 @@ import {
   CardMedia,
   CardContent,
   Button,
+  CircularProgress,
 } from '@mui/material';
 
 export default function Collections() {
-  const collections = [
-    {
-      id: 'coll_monsoon',
-      slug: 'monsoon-memories',
-      name: 'Monsoon Memories',
-      description: 'A nostalgic series capturing the dramatic rains and reflective streets of the subcontinent.',
-      image_url: 'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?auto=format&fit=crop&w=600&q=80'
-    },
-    {
-      id: 'coll_woodland',
-      slug: 'woodland-whispers',
-      name: 'Woodland Whispers',
-      description: 'Deep forest landscapes exploring lighting, shadow, and nature\'s silence.',
-      image_url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=600&q=80'
-    },
-    {
-      id: 'coll_abstract',
-      slug: 'abstract-expressions',
-      name: 'Abstract Expressions',
-      description: 'Non-representational emotional journeys rendered through aggressive texturing.',
-      image_url: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=600&q=80'
-    }
-  ];
+  const { data: collectionsRes, isLoading } = useQuery({
+    queryKey: ['publicCollectionsList'],
+    queryFn: () => fetch('/api/paintings/collections').then((res) => res.json()),
+  });
+
+  const collections = collectionsRes?.data || [];
 
   return (
     <Container maxWidth="lg" sx={{ py: 8 }}>
@@ -46,7 +30,17 @@ export default function Collections() {
         </Typography>
       </Box>
 
-      <Grid container spacing={4}>
+      {isLoading ? (
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 10, gap: 2 }}>
+          <CircularProgress size={50} color="primary" />
+          <Typography variant="body2" color="text.secondary">Loading collections...</Typography>
+        </Box>
+      ) : collections.length === 0 ? (
+        <Box sx={{ textAlign: 'center', py: 10 }}>
+          <Typography variant="body1" color="text.secondary">No collections found. Check back later!</Typography>
+        </Box>
+      ) : (
+        <Grid container spacing={4}>
         {collections.map((c) => (
           <Grid item xs={12} md={4} key={c.id}>
             <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -79,6 +73,7 @@ export default function Collections() {
           </Grid>
         ))}
       </Grid>
+      )}
     </Container>
   );
 }

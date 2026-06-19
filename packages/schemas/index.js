@@ -53,7 +53,8 @@ export const categorySchema = z.object({
   id: z.string().optional(),
   slug: z.string().min(1, 'Slug is required').regex(/^[a-z0-9-]+$/),
   name: z.string().min(1, 'Name is required'),
-  description: z.string().optional().nullable()
+  description: z.string().optional().nullable(),
+  images: z.string().optional().nullable()
 });
 
 export const collectionSchema = z.object({
@@ -101,6 +102,7 @@ export const siteSettingsSchema = z.object({
   social_facebook: z.string().url().or(z.literal('')).optional().nullable(),
   social_instagram: z.string().url().or(z.literal('')).optional().nullable(),
   social_pinterest: z.string().url().or(z.literal('')).optional().nullable(),
+  social_youtube: z.string().url().or(z.literal('')).optional().nullable(),
   contact_email: z.string().email('Invalid email address'),
   contact_phone: z.string().optional().nullable(),
   contact_address: z.string().optional().nullable(),

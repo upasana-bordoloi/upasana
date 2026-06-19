@@ -64,9 +64,6 @@ export default function About() {
           <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3, lineHeight: 1.8, fontSize: '1.05rem', whiteSpace: 'pre-line' }}>
             {settings.artist_bio || 'A graduate of the Florence Academy of Fine Art, I specialize in atmospheric oil paintings and heavily layered acrylic works.'}
           </Typography>
-          <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.8 }}>
-            My work is characterized by dynamic usage of palette knives and sand textures, capturing transient moments of light over coasts and mountain ridges. I live and work in the Hudson Valley, New York, maintaining a dynamic practice showing works globally.
-          </Typography>
         </Grid>
       </Grid>
 

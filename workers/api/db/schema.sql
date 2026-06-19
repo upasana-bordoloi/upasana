@@ -74,7 +74,8 @@ CREATE TABLE IF NOT EXISTS categories (
   id TEXT PRIMARY KEY,
   slug TEXT UNIQUE NOT NULL,
   name TEXT NOT NULL,
-  description TEXT
+  description TEXT,
+  images TEXT -- Store JSON list of image URLs for categories
 );
 
 -- 8. Painting Categories Mapping

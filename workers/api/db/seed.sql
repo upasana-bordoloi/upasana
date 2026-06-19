@@ -46,10 +46,11 @@ INSERT INTO user_roles (user_id, role_id) VALUES
 ('usr_super_admin', 'role_super_admin');
 
 -- Insert Default Categories
-INSERT INTO categories (id, slug, name, description) VALUES
-('cat_oil', 'oil-paintings', 'Oil on Canvas', 'Original paintings rendered in traditional oil paints on premium linen or cotton canvas.'),
-('cat_watercolor', 'watercolors', 'Watercolor', 'Delicate and fluid works using fine pigments on archival paper.'),
-('cat_acrylic', 'acrylics', 'Acrylic on Canvas', 'Vibrant, modern acrylic works combining texture and mixed media techniques.');
+INSERT INTO categories (id, slug, name, description, images) VALUES
+('cat_oil', 'oil-paintings', 'Oil on Canvas', 'Original paintings rendered in traditional oil paints on premium linen or cotton canvas. For custom orders, email us at oil-commissions@upasana-art.com', '["https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=600&q=80","https://images.unsplash.com/photo-1579783928621-7a13d66a62d1?auto=format&fit=crop&w=600&q=80","https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=600&q=80"]'),
+('cat_watercolor', 'watercolors', 'Watercolor', 'Delicate and fluid works using fine pigments on archival paper. For pricing and shipping queries, contact watercolor-sales@upasana-art.com', '["https://images.unsplash.com/photo-1579783929004-fa79c8cd9693?auto=format&fit=crop&w=600&q=80","https://images.unsplash.com/photo-1579783901586-d88db74b4fe4?auto=format&fit=crop&w=600&q=80"]'),
+('cat_acrylic', 'acrylics', 'Acrylic on Canvas', 'Vibrant, modern acrylic works combining texture and mixed media techniques. Direct inquiries to acrylic-showcase@upasana-art.com', '["https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80","https://images.unsplash.com/photo-1505118380757-91f5f5632de0?auto=format&fit=crop&w=600&q=80"]'),
+('cat_mixed', 'mixed-media', 'Mixed Media', 'Experimentations with sand textures, palette knives, and organic materials. Email inquiries to mixed-media-studio@upasana-art.com', '["https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=600&q=80","https://images.unsplash.com/photo-1549887534-1541e9326642?auto=format&fit=crop&w=600&q=80"]');
 
 -- Insert Default Collections
 INSERT INTO collections (id, slug, name, description, image_url) VALUES

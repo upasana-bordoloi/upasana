@@ -26,6 +26,7 @@ import {
   Instagram,
   Facebook,
   Pinterest,
+  YouTube,
   DeleteOutlineOutlined,
 } from '@mui/icons-material';
 import { useCartStore } from '../store/store.js';
@@ -207,15 +208,7 @@ export default function PublicLayout() {
       <Box sx={{ backgroundColor: '#2E2E2E', color: '#FAF8F5', py: 8, mt: 'auto', borderTop: '1px solid #EBE6DF' }}>
         <Container maxWidth="xl">
           <Grid container spacing={6}>
-            <Grid item xs={12} md={4}>
-              <Typography variant="h6" sx={{ fontFamily: '"Playfair Display", serif', color: '#A67C52', mb: 2 }}>
-                ABOUT THE GALLERY
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#C8C4BE', pr: 4 }}>
-                {settings.artist_bio || 'Exploring light, texture, and silence through fine art collections.'}
-              </Typography>
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={12} sm={6} md={6}>
               <Typography variant="h6" sx={{ fontFamily: '"Playfair Display", serif', color: '#A67C52', mb: 2 }}>
                 STUDIO LOCATION
               </Typography>
@@ -229,7 +222,7 @@ export default function PublicLayout() {
                 Phone: {settings.contact_phone || '+1 (555) 234-5678'}
               </Typography>
             </Grid>
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={12} sm={6} md={6}>
               <Typography variant="h6" sx={{ fontFamily: '"Playfair Display", serif', color: '#A67C52', mb: 2 }}>
                 FOLLOW THE ARTIST
               </Typography>
@@ -242,6 +235,9 @@ export default function PublicLayout() {
                 )}
                 {settings.social_pinterest && (
                   <IconButton href={settings.social_pinterest} target="_blank" sx={{ color: '#FAF8F5' }}><Pinterest /></IconButton>
+                )}
+                {settings.social_youtube && (
+                  <IconButton href={settings.social_youtube} target="_blank" sx={{ color: '#FAF8F5' }}><YouTube /></IconButton>
                 )}
               </Box>
             </Grid>

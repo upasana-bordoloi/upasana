@@ -28,6 +28,8 @@ import OrdersList from './admin/OrdersList.jsx';
 import SettingsManager from './admin/SettingsManager.jsx';
 import UsersList from './admin/UsersList.jsx';
 import Messages from './admin/Messages.jsx';
+import CategoriesManager from './admin/CategoriesManager.jsx';
+import CollectionsManager from './admin/CollectionsManager.jsx';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -71,6 +73,8 @@ export default function App() {
               <Route path="settings" element={<SettingsManager />} />
               <Route path="users" element={<UsersList />} />
               <Route path="messages" element={<Messages />} />
+              <Route path="categories" element={<CategoriesManager />} />
+              <Route path="collections" element={<CollectionsManager />} />
             </Route>
 
             {/* Redirect fallback */}

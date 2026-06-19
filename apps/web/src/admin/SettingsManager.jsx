@@ -76,6 +76,7 @@ export default function SettingsManager() {
       social_facebook: '',
       social_instagram: '',
       social_pinterest: '',
+      social_youtube: '',
       contact_email: '',
       contact_phone: '',
       contact_address: '',
@@ -106,6 +107,7 @@ export default function SettingsManager() {
         social_facebook: settings.social_facebook || '',
         social_instagram: settings.social_instagram || '',
         social_pinterest: settings.social_pinterest || '',
+        social_youtube: settings.social_youtube || '',
         contact_email: settings.contact_email || '',
         contact_phone: settings.contact_phone || '',
         contact_address: settings.contact_address || '',
@@ -367,6 +369,15 @@ export default function SettingsManager() {
                         {...register('social_pinterest')}
                         error={!!errors.social_pinterest}
                         helperText={errors.social_pinterest?.message}
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="YouTube URL"
+                        {...register('social_youtube')}
+                        error={!!errors.social_youtube}
+                        helperText={errors.social_youtube?.message}
                       />
                     </Grid>
                   </Grid>

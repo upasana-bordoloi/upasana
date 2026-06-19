@@ -29,6 +29,8 @@ import {
   PublicOutlined,
   MenuOutlined,
   MailOutlined,
+  CategoryOutlined,
+  FolderSpecialOutlined,
 } from '@mui/icons-material';
 import { useAuthStore, useToastStore } from '../store/store.js';
 
@@ -72,6 +74,8 @@ export default function AdminLayout() {
     { text: 'Messages', icon: <MailOutlined />, path: '/admin/messages', roles: ['SUPER_ADMIN', 'ADMIN', 'EDITOR'] },
     { text: 'Media Library', icon: <ImageOutlined />, path: '/admin/media', roles: ['SUPER_ADMIN', 'ADMIN'] },
     { text: 'Orders', icon: <ReceiptOutlined />, path: '/admin/orders', roles: ['SUPER_ADMIN', 'ADMIN'] },
+    { text: 'Categories', icon: <CategoryOutlined />, path: '/admin/categories', roles: ['SUPER_ADMIN', 'ADMIN'] },
+    { text: 'Collections', icon: <FolderSpecialOutlined />, path: '/admin/collections', roles: ['SUPER_ADMIN', 'ADMIN'] },
     { text: 'Site Settings', icon: <SettingsOutlined />, path: '/admin/settings', roles: ['SUPER_ADMIN', 'ADMIN'] },
     { text: 'Users List', icon: <PeopleOutlined />, path: '/admin/users', roles: ['SUPER_ADMIN'] },
   ];
