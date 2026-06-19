@@ -36,6 +36,11 @@ export default function CategoriesManager() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [deletingId, setDeletingId] = useState(null);
+  
+  // Delete confirmation states
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
   
   // Category images state (JSON array of URLs)
   const [categoryImages, setCategoryImages] = useState([]);
@@ -132,6 +137,7 @@ export default function CategoriesManager() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminCategoriesList']);
+      queryClient.invalidateQueries(['publicCategoriesList']);
       setDialogOpen(false);
       showToast(
         editingCategory ? 'Category updated successfully!' : 'Category created successfully!',
@@ -147,6 +153,7 @@ export default function CategoriesManager() {
   // Delete Mutation
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
+      setDeletingId(id);
       const res = await fetch(`/api/paintings/categories/${id}`, { method: 'DELETE' });
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
@@ -156,11 +163,15 @@ export default function CategoriesManager() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminCategoriesList']);
+      queryClient.invalidateQueries(['publicCategoriesList']);
       showToast('Category deleted successfully.', 'success');
     },
     onError: (err) => {
       showToast(err.message || 'Failed to delete category.', 'error');
     },
+    onSettled: () => {
+      setDeletingId(null);
+    }
   });
 
   const handleSaveSubmit = (data) => {
@@ -172,9 +183,16 @@ export default function CategoriesManager() {
     saveMutation.mutate(payload);
   };
 
-  const handleDelete = (id, name) => {
-    if (confirm(`Remove category "${name}"? This will unlink but NOT delete paintings in it.`)) {
-      deleteMutation.mutate(id);
+  const handleDeleteClick = (category) => {
+    setCategoryToDelete(category);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (categoryToDelete) {
+      deleteMutation.mutate(categoryToDelete.id);
+      setDeleteConfirmOpen(false);
+      setCategoryToDelete(null);
     }
   };
 
@@ -292,11 +310,22 @@ export default function CategoriesManager() {
                       {cat.description || '-'}
                     </TableCell>
                     <TableCell align="right">
-                      <IconButton onClick={() => handleOpenEdit(cat)} color="primary" sx={{ mr: 1 }} title="Edit">
+                      <IconButton 
+                        onClick={() => handleOpenEdit(cat)} 
+                        color="primary" 
+                        sx={{ mr: 1 }} 
+                        title="Edit"
+                        disabled={deletingId !== null || saveMutation.isPending}
+                      >
                         <EditOutlined />
                       </IconButton>
-                      <IconButton onClick={() => handleDelete(cat.id, cat.name)} color="error" title="Delete">
-                        <DeleteOutlineOutlined />
+                      <IconButton 
+                        onClick={() => handleDeleteClick(cat)} 
+                        color="error" 
+                        title="Delete"
+                        disabled={deletingId !== null || saveMutation.isPending}
+                      >
+                        {deletingId === cat.id ? <CircularProgress size={20} color="inherit" /> : <DeleteOutlineOutlined />}
                       </IconButton>
                     </TableCell>
                   </TableRow>
@@ -322,9 +351,9 @@ export default function CategoriesManager() {
       />
 
       {/* Create/Edit Dialog */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog open={dialogOpen} onClose={() => !saveMutation.isPending && setDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>{editingCategory ? 'Edit Category' : 'Create Medium Category'}</DialogTitle>
-        <Box component="form" onSubmit={handleSubmit(saveSubmit)}>
+        <Box component="form" onSubmit={handleSubmit(handleSaveSubmit)}>
           <DialogContent>
             {errorMsg && <Alert severity="error" sx={{ mb: 2, borderRadius: 0 }}>{errorMsg}</Alert>}
 
@@ -335,6 +364,7 @@ export default function CategoriesManager() {
               {...register('name')}
               error={!!errors.name}
               helperText={errors.name?.message}
+              disabled={saveMutation.isPending}
             />
 
             <TextField
@@ -344,6 +374,7 @@ export default function CategoriesManager() {
               {...register('slug')}
               error={!!errors.slug}
               helperText={errors.slug?.message || "URL-friendly string. Auto-generated from name."}
+              disabled={saveMutation.isPending}
             />
 
             <TextField
@@ -355,6 +386,7 @@ export default function CategoriesManager() {
               {...register('description')}
               error={!!errors.description}
               helperText={errors.description?.message || "e.g. Email us at landscapes@upasana-art.com for print enquiries."}
+              disabled={saveMutation.isPending}
             />
 
             <Divider sx={{ my: 3 }} />
@@ -392,23 +424,25 @@ export default function CategoriesManager() {
                 size="small"
                 value={newImageUrl}
                 onChange={(e) => setNewImageUrl(e.target.value)}
+                disabled={saveMutation.isPending}
               />
               <Button
                 variant="outlined"
                 size="small"
+                disabled={saveMutation.isPending}
                 onClick={() => {
                   handleAddImage(newImageUrl);
                 }}
               >
                 Add
               </Button>
-              <Button variant="outlined" size="small" onClick={openMediaLibrary}>
+              <Button variant="outlined" size="small" disabled={saveMutation.isPending} onClick={openMediaLibrary}>
                 Browse
               </Button>
             </Box>
           </DialogContent>
           <DialogActions sx={{ p: 3 }}>
-            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button onClick={() => setDialogOpen(false)} disabled={saveMutation.isPending}>Cancel</Button>
             <Button type="submit" variant="contained" disabled={saveMutation.isPending}>
               {saveMutation.isPending ? 'Saving...' : 'Save Category'}
             </Button>
@@ -466,6 +500,42 @@ export default function CategoriesManager() {
             )}
           </Grid>
         </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog 
+        open={deleteConfirmOpen} 
+        onClose={() => !deleteMutation.isPending && setDeleteConfirmOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 600 }}>
+          Delete Category
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body1">
+            Are you sure you want to remove the category <strong>"{categoryToDelete?.name}"</strong>?
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary' }}>
+            This will unlink but NOT delete paintings in it.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button 
+            onClick={() => setDeleteConfirmOpen(false)} 
+            disabled={deleteMutation.isPending}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleConfirmDelete} 
+            color="error" 
+            variant="contained" 
+            disabled={deleteMutation.isPending}
+          >
+            {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
       </Dialog>
     </Box>
   );

@@ -35,6 +35,7 @@ export default function CollectionsManager() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCollection, setEditingCollection] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [deletingId, setDeletingId] = useState(null);
   
   // Media picker states
   const [mediaTarget, setMediaTarget] = useState(null); // 'image_url'
@@ -115,6 +116,7 @@ export default function CollectionsManager() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminCollectionsList']);
+      queryClient.invalidateQueries(['publicCollectionsList']);
       setDialogOpen(false);
       showToast(
         editingCollection ? 'Collection updated successfully!' : 'Collection created successfully!',
@@ -130,6 +132,7 @@ export default function CollectionsManager() {
   // Delete Mutation
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
+      setDeletingId(id);
       const res = await fetch(`/api/paintings/collections/${id}`, { method: 'DELETE' });
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
@@ -139,11 +142,15 @@ export default function CollectionsManager() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['adminCollectionsList']);
+      queryClient.invalidateQueries(['publicCollectionsList']);
       showToast('Collection deleted successfully.', 'success');
     },
     onError: (err) => {
       showToast(err.message || 'Failed to delete collection.', 'error');
     },
+    onSettled: () => {
+      setDeletingId(null);
+    }
   });
 
   const handleSaveSubmit = (data) => {
@@ -242,11 +249,22 @@ export default function CollectionsManager() {
                     {c.description || '-'}
                   </TableCell>
                   <TableCell align="right">
-                    <IconButton onClick={() => handleOpenEdit(c)} color="primary" sx={{ mr: 1 }} title="Edit">
+                    <IconButton 
+                      onClick={() => handleOpenEdit(c)} 
+                      color="primary" 
+                      sx={{ mr: 1 }} 
+                      title="Edit"
+                      disabled={deletingId !== null || saveMutation.isPending}
+                    >
                       <EditOutlined />
                     </IconButton>
-                    <IconButton onClick={() => handleDelete(c.id, c.name)} color="error" title="Delete">
-                      <DeleteOutlineOutlined />
+                    <IconButton 
+                      onClick={() => handleDelete(c.id, c.name)} 
+                      color="error" 
+                      title="Delete"
+                      disabled={deletingId !== null || saveMutation.isPending}
+                    >
+                      {deletingId === c.id ? <CircularProgress size={20} color="inherit" /> : <DeleteOutlineOutlined />}
                     </IconButton>
                   </TableCell>
                 </TableRow>
@@ -271,9 +289,9 @@ export default function CollectionsManager() {
       />
 
       {/* Create/Edit Dialog */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog open={dialogOpen} onClose={() => !saveMutation.isPending && setDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>{editingCollection ? 'Edit Collection' : 'Create Curated Collection'}</DialogTitle>
-        <Box component="form" onSubmit={handleSubmit(saveSubmit)}>
+        <Box component="form" onSubmit={handleSubmit(handleSaveSubmit)}>
           <DialogContent>
             {errorMsg && <Alert severity="error" sx={{ mb: 2, borderRadius: 0 }}>{errorMsg}</Alert>}
 
@@ -284,6 +302,7 @@ export default function CollectionsManager() {
               {...register('name')}
               error={!!errors.name}
               helperText={errors.name?.message}
+              disabled={saveMutation.isPending}
             />
 
             <TextField
@@ -293,6 +312,7 @@ export default function CollectionsManager() {
               {...register('slug')}
               error={!!errors.slug}
               helperText={errors.slug?.message || "URL-friendly string. Auto-generated from name."}
+              disabled={saveMutation.isPending}
             />
 
             <TextField
@@ -304,6 +324,7 @@ export default function CollectionsManager() {
               {...register('description')}
               error={!!errors.description}
               helperText={errors.description?.message}
+              disabled={saveMutation.isPending}
             />
 
             <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
@@ -313,18 +334,20 @@ export default function CollectionsManager() {
                 {...register('image_url')}
                 error={!!errors.image_url}
                 helperText={errors.image_url?.message || "Shown on collections directory. Optional."}
+                disabled={saveMutation.isPending}
               />
               <Button
                 variant="outlined"
                 onClick={() => openMediaLibrary('image_url')}
                 sx={{ minWidth: 48, p: 0, height: 56 }}
+                disabled={saveMutation.isPending}
               >
                 <ImageOutlined />
               </Button>
             </Box>
           </DialogContent>
           <DialogActions sx={{ p: 3 }}>
-            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button onClick={() => setDialogOpen(false)} disabled={saveMutation.isPending}>Cancel</Button>
             <Button type="submit" variant="contained" disabled={saveMutation.isPending}>
               {saveMutation.isPending ? 'Saving...' : 'Save Collection'}
             </Button>
