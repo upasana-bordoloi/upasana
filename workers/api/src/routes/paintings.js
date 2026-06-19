@@ -66,9 +66,7 @@ paintingsRouter.get('/', async (c) => {
     query += ` AND p.status = ? `;
     params.push(statusFilter);
   } else {
-    if (isAdmin) {
-      query += ` AND p.status != 'ARCHIVED' `;
-    } else {
+    if (!isAdmin) {
       query += ` AND p.status = 'PUBLISHED' `;
     }
   }
@@ -153,9 +151,7 @@ paintingsRouter.get('/', async (c) => {
     countQuery += ` AND p.status = ? `;
     countParams.push(statusFilter);
   } else {
-    if (isAdmin) {
-      countQuery += ` AND p.status != 'ARCHIVED' `;
-    } else {
+    if (!isAdmin) {
       countQuery += ` AND p.status = 'PUBLISHED' `;
     }
   }
