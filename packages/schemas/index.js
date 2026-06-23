@@ -107,6 +107,7 @@ export const siteSettingsSchema = z.object({
   contact_phone: z.string().optional().nullable(),
   contact_address: z.string().optional().nullable(),
   footer_content: z.string().optional().nullable(),
+  testimonials: z.string().optional().nullable(),
   seo_default_title: z.string().min(1, 'Default SEO title is required'),
   seo_default_description: z.string().min(1, 'Default SEO description is required'),
   imgbb_api_key: z.string().optional().nullable(),

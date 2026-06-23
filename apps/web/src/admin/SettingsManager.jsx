@@ -31,7 +31,7 @@ import {
   FormControlLabel,
   Checkbox,
 } from '@mui/material';
-import { DeleteOutlineOutlined, AddOutlined, ImageOutlined, CloseOutlined } from '@mui/icons-material';
+import { DeleteOutlineOutlined, AddOutlined, ImageOutlined, CloseOutlined, ChevronLeft, ChevronRight } from '@mui/icons-material';
 import { useToastStore } from '../store/store.js';
 
 export default function SettingsManager() {
@@ -42,6 +42,7 @@ export default function SettingsManager() {
   // Lists management states
   const [exhibitionsList, setExhibitionsList] = useState([]);
   const [awardsList, setAwardsList] = useState([]);
+  const [testimonialsList, setTestimonialsList] = useState([]);
   const [newExYear, setNewExYear] = useState('');
   const [newExTitle, setNewExTitle] = useState('');
   const [newExLocation, setNewExLocation] = useState('');
@@ -49,6 +50,10 @@ export default function SettingsManager() {
   const [newAwTitle, setNewAwTitle] = useState('');
   const [newAwOrg, setNewAwOrg] = useState('');
 
+  // Testimonials management states
+  const [newTestAuthor, setNewTestAuthor] = useState('');
+  const [newTestLocation, setNewTestLocation] = useState('');
+  const [newTestQuote, setNewTestQuote] = useState('');
   // Hero carousel slides management states
   const [heroSlidesList, setHeroSlidesList] = useState([]);
   const [newSlideTitle, setNewSlideTitle] = useState('');
@@ -101,7 +106,8 @@ export default function SettingsManager() {
       featured_section_title: 'Featured Works',
       featured_section_subtitle: 'Handpicked Selection',
       featured_section_limit: '3',
-      hero_slides: '[]'
+      hero_slides: '[]',
+      testimonials: '[]'
     }
   });
 
@@ -133,7 +139,8 @@ export default function SettingsManager() {
         featured_section_title: settings.featured_section_title || 'Featured Works',
         featured_section_subtitle: settings.featured_section_subtitle || 'Handpicked Selection',
         featured_section_limit: settings.featured_section_limit || '3',
-        hero_slides: settings.hero_slides || '[]'
+        hero_slides: settings.hero_slides || '[]',
+        testimonials: settings.testimonials || '[]'
       });
 
       // Parse Exhibitions & Awards & Custom Slides
@@ -144,6 +151,13 @@ export default function SettingsManager() {
         parsedEx = [];
       }
       setExhibitionsList(parsedEx);
+
+      // Parse Testimonials
+      let parsedTestimonials = [];
+      try {
+        parsedTestimonials = JSON.parse(settings.testimonials || '[]');
+      } catch (e) { parsedTestimonials = []; }
+      setTestimonialsList(parsedTestimonials);
 
       let parsedAw = [];
       try {
@@ -198,6 +212,49 @@ export default function SettingsManager() {
 
   const handleRemoveAward = (index) => {
     setAwardsList(awardsList.filter((_, i) => i !== index));
+  };
+
+  // Testimonials handlers
+  const handleAddTestimonial = () => {
+    if (testimonialsList.length >= 5) {
+      showToast('Maximum of 5 testimonials allowed.', 'warning');
+      return;
+    }
+    if (newTestAuthor.trim() && newTestQuote.trim()) {
+      setTestimonialsList([
+        ...testimonialsList,
+        {
+          author: newTestAuthor.trim(),
+          location: newTestLocation.trim(),
+          quote: newTestQuote.trim(),
+        },
+      ]);
+      setNewTestAuthor('');
+      setNewTestLocation('');
+      setNewTestQuote('');
+    } else {
+      showToast('Author and Quote are required.', 'warning');
+    }
+  };
+
+  const handleRemoveTestimonial = (index) => {
+    setTestimonialsList(testimonialsList.filter((_, i) => i !== index));
+  };
+
+  const handleChangeTestimonial = (index, field, value) => {
+    setTestimonialsList(prev =>
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
+    );
+  };
+
+  const handleMoveTestimonial = (index, direction) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= testimonialsList.length) return;
+    const newList = [...testimonialsList];
+    const temp = newList[newIndex];
+    newList[newIndex] = newList[index];
+    newList[index] = temp;
+    setTestimonialsList(newList);
   };
 
   // Media selector helper
@@ -279,6 +336,7 @@ export default function SettingsManager() {
       about_exhibitions: JSON.stringify(exhibitionsList),
       about_awards: JSON.stringify(awardsList),
       hero_slides: JSON.stringify(heroSlidesList),
+      testimonials: JSON.stringify(testimonialsList),
     };
     mutation.mutate(payload);
   };
@@ -899,7 +957,65 @@ export default function SettingsManager() {
                   </TableContainer>
                 </Grid>
 
-                <Grid item xs={12}>
+                {/* Testimonials Management */}
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Manage Testimonials</Typography>
+                  <Paper sx={{ p: 2, border: '1px solid #EBE6DF', boxShadow: 'none', mb: 2, borderRadius: 0 }}>
+                    <Grid container spacing={2} alignItems="center">
+                      <Grid item xs={4}>
+                        <TextField fullWidth size="small" label="Author" placeholder="e.g. H. Sterling" value={newTestAuthor} onChange={(e) => setNewTestAuthor(e.target.value)} />
+                      </Grid>
+                      <Grid item xs={4}>
+                        <TextField fullWidth size="small" label="Location" placeholder="e.g. London UK" value={newTestLocation} onChange={(e) => setNewTestLocation(e.target.value)} />
+                      </Grid>
+                      <Grid item xs={4}>
+                        <TextField fullWidth size="small" label="Quote" placeholder="Quote text" value={newTestQuote} onChange={(e) => setNewTestQuote(e.target.value)} />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Button variant="outlined" startIcon={<AddOutlined />} onClick={handleAddTestimonial} fullWidth>Add Testimonial</Button>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+                  <TableContainer component={Paper} sx={{ maxHeight: 250, border: '1px solid #EBE6DF', boxShadow: 'none', borderRadius: 0 }}>
+                    <Table size="small" stickyHeader>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Author</TableCell>
+                          <TableCell>Location</TableCell>
+                          <TableCell>Quote</TableCell>
+                          <TableCell align="right">Action</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {testimonialsList.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>No testimonials listed yet.</TableCell>
+                          </TableRow>
+                        ) : (
+                          testimonialsList.map((test, idx) => (
+                            <TableRow key={idx}>
+                              <TableCell>
+                                <TextField fullWidth size="small" value={test.author} onChange={(e) => handleChangeTestimonial(idx, 'author', e.target.value)} />
+                              </TableCell>
+                              <TableCell>
+                                <TextField fullWidth size="small" value={test.location} onChange={(e) => handleChangeTestimonial(idx, 'location', e.target.value)} />
+                              </TableCell>
+                              <TableCell>
+                                <TextField fullWidth size="small" value={test.quote} onChange={(e) => handleChangeTestimonial(idx, 'quote', e.target.value)} />
+                              </TableCell>
+                              <TableCell align="right">
+                                <IconButton size="small" onClick={() => handleMoveTestimonial(idx, -1)} disabled={idx===0}><ChevronLeft fontSize="small" /></IconButton>
+                                <IconButton size="small" onClick={() => handleMoveTestimonial(idx, 1)} disabled={idx===testimonialsList.length-1}><ChevronRight fontSize="small" /></IconButton>
+                                <IconButton size="small" color="error" onClick={() => handleRemoveTestimonial(idx)}><DeleteOutlineOutlined fontSize="small" /></IconButton>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Grid>
+<Grid item xs={12}>
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                     <Button type="submit" variant="contained" size="large" disabled={isSubmitting} sx={{ py: 1.5, px: 6 }}>
                       {isSubmitting ? 'Saving Settings...' : 'Save Site Settings'}

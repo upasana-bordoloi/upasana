@@ -21,7 +21,7 @@ import { formatPrice } from 'utils';
 function CategoryCard({ category }) {
   const navigate = useNavigate();
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
-  
+
   let images = [];
   try {
     images = JSON.parse(category.images || '[]');
@@ -30,8 +30,8 @@ function CategoryCard({ category }) {
   }
 
   // Fallback default image if none exist
-  const displayImage = images.length > 0 
-    ? images[currentImgIndex] 
+  const displayImage = images.length > 0
+    ? images[currentImgIndex]
     : 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=600&q=80';
 
   const handleNextImage = (e) => {
@@ -49,12 +49,12 @@ function CategoryCard({ category }) {
   };
 
   return (
-    <Card 
+    <Card
       onClick={handleCardClick}
-      sx={{ 
-        height: '100%', 
-        display: 'flex', 
-        flexDirection: 'column', 
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
         borderRadius: 0,
         border: '1px solid #EBE6DF',
         boxShadow: 'none',
@@ -74,8 +74,8 @@ function CategoryCard({ category }) {
           component="img"
           image={displayImage}
           alt={category.name}
-          sx={{ 
-            height: '100%', 
+          sx={{
+            height: '100%',
             objectFit: 'cover',
             transition: 'transform 0.5s ease',
           }}
@@ -84,13 +84,13 @@ function CategoryCard({ category }) {
         {/* Hover-revealed image swapping buttons (only if multiple images) */}
         {images.length > 1 && (
           <>
-            <IconButton 
+            <IconButton
               className="swapper-btn"
               onClick={handlePrevImage}
-              sx={{ 
-                position: 'absolute', 
-                left: 8, 
-                top: '50%', 
+              sx={{
+                position: 'absolute',
+                left: 8,
+                top: '50%',
                 transform: 'translateY(-50%)',
                 backgroundColor: 'rgba(255, 255, 255, 0.8)',
                 color: '#2E2E2E',
@@ -104,13 +104,13 @@ function CategoryCard({ category }) {
             >
               <ChevronLeft fontSize="small" />
             </IconButton>
-            <IconButton 
+            <IconButton
               className="swapper-btn"
               onClick={handleNextImage}
-              sx={{ 
-                position: 'absolute', 
-                right: 8, 
-                top: '50%', 
+              sx={{
+                position: 'absolute',
+                right: 8,
+                top: '50%',
                 transform: 'translateY(-50%)',
                 backgroundColor: 'rgba(255, 255, 255, 0.8)',
                 color: '#2E2E2E',
@@ -126,11 +126,11 @@ function CategoryCard({ category }) {
             </IconButton>
 
             {/* Micro image indicator dots */}
-            <Box 
-              sx={{ 
-                position: 'absolute', 
-                bottom: 12, 
-                left: '50%', 
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: 12,
+                left: '50%',
                 transform: 'translateX(-50%)',
                 display: 'flex',
                 gap: 0.8,
@@ -142,7 +142,7 @@ function CategoryCard({ category }) {
               }}
             >
               {images.map((_, idx) => (
-                <Box 
+                <Box
                   key={idx}
                   sx={{
                     width: 6,
@@ -167,14 +167,14 @@ function CategoryCard({ category }) {
             {category.description || 'View paintings belonging to this category.'}
           </Typography>
         </Box>
-        <Typography 
-          variant="subtitle2" 
-          color="secondary" 
-          sx={{ 
-            fontWeight: 600, 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 0.5, 
+        <Typography
+          variant="subtitle2"
+          color="secondary"
+          sx={{
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.5,
             mt: 'auto',
             letterSpacing: '0.05em'
           }}
@@ -199,14 +199,14 @@ export default function Home() {
     queryFn: () => fetch('/api/settings').then(res => res.json())
   });
   const settings = settingsRes?.data || {};
-    // Parse custom hero slides from site settings (JSON string)
-    let heroSlides = [];
-    try {
-      heroSlides = JSON.parse(settings.hero_slides || '[]');
-    } catch (e) {
-      console.error('Failed to parse hero_slides:', e);
-      heroSlides = [];
-    }
+  // Parse custom hero slides from site settings (JSON string)
+  let heroSlides = [];
+  try {
+    heroSlides = JSON.parse(settings.hero_slides || '[]');
+  } catch (e) {
+    console.error('Failed to parse hero_slides:', e);
+    heroSlides = [];
+  }
 
   const featuredLimit = settings.featured_section_limit || '3';
   const showFeatured = settings.featured_section_show !== '0';
@@ -284,12 +284,12 @@ export default function Home() {
               <Grid container>
                 <Grid item xs={12} md={7}>
                   {slide.medium && (
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        color: 'secondary.main', 
-                        letterSpacing: '0.25em', 
-                        fontWeight: 600, 
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: 'secondary.main',
+                        letterSpacing: '0.25em',
+                        fontWeight: 600,
                         textTransform: 'uppercase',
                         display: 'block',
                         mb: 2
@@ -334,13 +334,13 @@ export default function Home() {
                         Explore Gallery
                       </Button>
                     )}
-                    <Button 
-                      variant="outlined" 
-                      component={RouterLink} 
-                      to="/about" 
+                    <Button
+                      variant="outlined"
+                      component={RouterLink}
+                      to="/about"
                       size="large"
-                      sx={{ 
-                        color: '#FAF8F5', 
+                      sx={{
+                        color: '#FAF8F5',
                         borderColor: '#FAF8F5',
                         '&:hover': {
                           borderColor: 'secondary.main',
@@ -566,14 +566,34 @@ export default function Home() {
         <Typography variant="h2" sx={{ fontSize: { xs: '2rem', md: '2.5rem' }, mt: 1, mb: 6 }}>
           Collector Voices
         </Typography>
-        <Box sx={{ py: 2 }}>
-          <Typography variant="h5" sx={{ fontStyle: 'italic', fontFamily: '"Playfair Display", serif', lineHeight: 1.6, mb: 4 }}>
-            "The textures in 'Monsoon Memories I' are mesmerizing. It completely transforms the light in our living space. The ordering experience was flawless."
-          </Typography>
-          <Typography variant="subtitle1" fontWeight="600" color="secondary">
-            — H. Sterling, London UK
-          </Typography>
-        </Box>
+        {(() => {
+          let testimonials = [];
+          try {
+            testimonials = JSON.parse(settings.testimonials || '[]');
+          } catch (e) { /* ignore */ }
+          if (testimonials.length === 0) {
+            return (
+              <Box sx={{ py: 2 }}>
+                <Typography variant="h5" sx={{ fontStyle: 'italic', fontFamily: '"Playfair Display", serif', lineHeight: 1.6, mb: 4 }}>
+                  "The textures in 'Monsoon Memories I' are mesmerizing. It completely transforms the light in our living space. The ordering experience was flawless."
+                </Typography>
+                <Typography variant="subtitle1" fontWeight="600" color="secondary">
+                  — H. Sterling, London UK
+                </Typography>
+              </Box>
+            );
+          }
+          return testimonials.slice(0, 2).map((t, idx) => (
+            <Box key={idx} sx={{ py: 2 }}>
+              <Typography variant="h5" sx={{ fontStyle: 'italic', fontFamily: '"Playfair Display", serif', lineHeight: 1.6, mb: 4 }}>
+                "{t.quote}"
+              </Typography>
+              <Typography variant="subtitle1" fontWeight="600" color="secondary">
+                — {t.author}{t.location ? `, ${t.location}` : ''}
+              </Typography>
+            </Box>
+          ));
+        })()}
       </Container>
 
       {/* Contact CTA */}
@@ -583,7 +603,7 @@ export default function Home() {
             Acquire An Original Masterpiece
           </Typography>
           <Typography variant="body1" sx={{ color: '#C8C4BE', mb: 5, maxWidth: '600px', mx: 'auto' }}>
-            Interested in commissions, exhibitions, or a private gallery viewing? Let's connect.
+            Interested in commissions, prints or exhibitions? Let's connect.
           </Typography>
           <Button variant="contained" color="secondary" component={RouterLink} to="/contact" size="large">
             Get In Touch
