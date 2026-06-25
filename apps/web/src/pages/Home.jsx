@@ -239,6 +239,14 @@ export default function Home() {
   const slides = (heroSlides && heroSlides.length > 0) ? heroSlides : (featuredPaintings.length > 0 ? featuredPaintings : defaultSlides);
   const currentSlide = slides[activeSlide] || slides[0];
 
+  const handlePrevSlide = () => {
+    setActiveSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  };
+
+  const handleNextSlide = () => {
+    setActiveSlide((prev) => (prev + 1) % slides.length);
+  };
+
   return (
     <Box>
       {/* Sliding Hero Carousel Section */}
