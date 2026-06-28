@@ -64,6 +64,7 @@ export default function SettingsManager() {
   // Media picker states
   const [mediaTarget, setMediaTarget] = useState(null); // 'about_image_url', 'meet_artist_image_url', or 'hero_slide_image'
   const [mediaList, setMediaList] = useState([]);
+  const [isMediaLoading, setIsMediaLoading] = useState(false);
 
   // Fetch settings
   const { data: settingsRes, isLoading } = useQuery({
@@ -260,12 +261,16 @@ export default function SettingsManager() {
   // Media selector helper
   const openMediaLibrary = (target) => {
     setMediaTarget(target);
+    setIsMediaLoading(true);
     fetch('/api/media')
       .then((res) => res.json())
       .then((json) => {
         if (json.success) setMediaList(json.data);
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => {
+        setIsMediaLoading(false);
+      });
   };
 
   const handleSelectMedia = (url) => {
@@ -1015,10 +1020,21 @@ export default function SettingsManager() {
                     </Table>
                   </TableContainer>
                 </Grid>
-<Grid item xs={12}>
+                <Grid item xs={12}>
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                    <Button type="submit" variant="contained" size="large" disabled={isSubmitting} sx={{ py: 1.5, px: 6 }}>
-                      {isSubmitting ? 'Saving Settings...' : 'Save Site Settings'}
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      size="large"
+                      disabled={isSubmitting || mutation.isPending}
+                      sx={{ py: 1.5, px: 6, display: 'flex', alignItems: 'center' }}
+                    >
+                      {(isSubmitting || mutation.isPending) ? (
+                        <>
+                          <CircularProgress size={20} color="inherit" sx={{ mr: 1.5 }} />
+                          Saving Settings...
+                        </>
+                      ) : 'Save Site Settings'}
                     </Button>
                   </Box>
                 </Grid>
@@ -1034,46 +1050,53 @@ export default function SettingsManager() {
           <IconButton onClick={() => setMediaTarget(null)}><CloseOutlined /></IconButton>
         </DialogTitle>
         <DialogContent>
-          <Grid container spacing={2}>
-            {mediaList.length === 0 ? (
-              <Box sx={{ p: 4, width: '100%', textAlign: 'center' }}>
-                <Typography variant="body2" color="text.secondary">
-                  No images in media library. Upload images in the Media Library tab first.
-                </Typography>
-              </Box>
-            ) : (
-              mediaList.map((m) => (
-                <Grid item xs={6} sm={4} md={3} key={m.id}>
-                  <Paper
-                    sx={{
-                      cursor: 'pointer',
-                      border: '1px solid #EBE6DF',
-                      '&:hover': { borderColor: 'secondary.main' }
-                    }}
-                    onClick={() => handleSelectMedia(m.url)}
-                  >
-                    <img
-                      src={m.url}
-                      alt={m.filename}
-                      style={{ width: '100%', height: 120, objectFit: 'cover' }}
-                    />
-                    <Typography
-                      variant="caption"
+          {isMediaLoading ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 8, gap: 2 }}>
+              <CircularProgress size={40} color="secondary" />
+              <Typography variant="body2" color="text.secondary">Loading media library...</Typography>
+            </Box>
+          ) : (
+            <Grid container spacing={2}>
+              {mediaList.length === 0 ? (
+                <Box sx={{ p: 4, width: '100%', textAlign: 'center' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    No images in media library. Upload images in the Media Library tab first.
+                  </Typography>
+                </Box>
+              ) : (
+                mediaList.map((m) => (
+                  <Grid item xs={6} sm={4} md={3} key={m.id}>
+                    <Paper
                       sx={{
-                        p: 1,
-                        display: 'block',
-                        textOverflow: 'ellipsis',
-                        overflow: 'hidden',
-                        whiteSpace: 'nowrap'
+                        cursor: 'pointer',
+                        border: '1px solid #EBE6DF',
+                        '&:hover': { borderColor: 'secondary.main' }
                       }}
+                      onClick={() => handleSelectMedia(m.url)}
                     >
-                      {m.filename}
-                    </Typography>
-                  </Paper>
-                </Grid>
-              ))
-            )}
-          </Grid>
+                      <img
+                        src={m.url}
+                        alt={m.filename}
+                        style={{ width: '100%', height: 120, objectFit: 'cover' }}
+                      />
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          p: 1,
+                          display: 'block',
+                          textOverflow: 'ellipsis',
+                          overflow: 'hidden',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {m.filename}
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                ))
+              )}
+            </Grid>
+          )}
         </DialogContent>
       </Dialog>
     </Box>

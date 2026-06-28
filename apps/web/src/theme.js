@@ -115,10 +115,10 @@ const theme = createTheme({
         root: {
           borderRadius: 0,
           border: '1px solid #EBE6DF',
-          boxShadow: '0px 2px 8px rgba(46, 46, 46, 0.03)',
+          boxShadow: '0px 4px 20px rgba(46, 46, 46, 0.04)',
           transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
           '&:hover': {
-            boxShadow: '0px 8px 24px rgba(46, 46, 46, 0.07)',
+            boxShadow: '0px 8px 30px rgba(46, 46, 46, 0.06)',
             transform: 'translateY(-2px)',
           },
         },

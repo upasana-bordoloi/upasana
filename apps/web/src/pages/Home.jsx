@@ -13,6 +13,7 @@ import {
   Divider,
   Chip,
   IconButton,
+  Skeleton,
 } from '@mui/material';
 import { ChevronLeft, ChevronRight, ArrowForwardOutlined } from '@mui/icons-material';
 import { formatPrice } from 'utils';
@@ -57,7 +58,6 @@ function CategoryCard({ category }) {
         flexDirection: 'column',
         borderRadius: 0,
         border: '1px solid #EBE6DF',
-        boxShadow: 'none',
         cursor: 'pointer',
         transition: 'transform 0.3s ease, border-color 0.3s ease',
         '&:hover': {
@@ -194,7 +194,7 @@ export default function Home() {
   }, []);
 
   // Load site settings
-  const { data: settingsRes } = useQuery({
+  const { data: settingsRes, isLoading: isSettingsLoading } = useQuery({
     queryKey: ['settings'],
     queryFn: () => fetch('/api/settings').then(res => res.json())
   });
@@ -212,12 +212,14 @@ export default function Home() {
   const showFeatured = settings.featured_section_show !== '0';
 
   // Load featured paintings
-  const { data: featuredRes } = useQuery({
+  const { data: featuredRes, isLoading: isFeaturedLoading } = useQuery({
     queryKey: ['featuredPaintings', featuredLimit],
     queryFn: () => fetch(`/api/paintings?featured=true&status=PUBLISHED&limit=${featuredLimit}`).then(res => res.json()),
     enabled: Object.keys(settings).length > 0
   });
   const featuredPaintings = featuredRes?.data || [];
+
+  const isHeroLoading = isSettingsLoading || (Object.keys(settings).length > 0 && heroSlides.length === 0 && isFeaturedLoading);
 
   // Load categories
   const { data: categoriesRes } = useQuery({
@@ -236,7 +238,18 @@ export default function Home() {
     }
   ];
 
-  const slides = (heroSlides && heroSlides.length > 0) ? heroSlides : (featuredPaintings.length > 0 ? featuredPaintings : defaultSlides);
+  const loadingSlides = [
+    {
+      title: 'Original Fine Art Paintings',
+      subtitle: 'Exploring light, nature, and raw human emotion...',
+      image_url: '',
+      isPlaceholder: true
+    }
+  ];
+
+  const slides = isHeroLoading
+    ? loadingSlides
+    : ((heroSlides && heroSlides.length > 0) ? heroSlides : (featuredPaintings.length > 0 ? featuredPaintings : defaultSlides));
   const currentSlide = slides[activeSlide] || slides[0];
 
   const handlePrevSlide = () => {
@@ -269,9 +282,19 @@ export default function Home() {
               left: 0,
               width: '100%',
               height: '100%',
-              backgroundImage: `url(${slide.image_url})`,
-              backgroundSize: 'cover',
+              backgroundImage: (isHeroLoading || slide.isPlaceholder) ? 'none' : `url(${slide.image_url})`,
               backgroundPosition: 'center',
+              backgroundColor: '#1E1E1E',
+              background: (isHeroLoading || slide.isPlaceholder)
+                ? 'linear-gradient(135deg, #1C1C1C 0%, #3D3227 50%, #111111 100%)'
+                : undefined,
+              backgroundSize: (isHeroLoading || slide.isPlaceholder) ? '200% 200%' : 'cover',
+              animation: (isHeroLoading || slide.isPlaceholder) ? 'gradientMove 8s ease infinite' : 'none',
+              '@keyframes gradientMove': {
+                '0%': { backgroundPosition: '0% 50%' },
+                '50%': { backgroundPosition: '100% 50%' },
+                '100%': { backgroundPosition: '0% 50%' }
+              },
               opacity: idx === activeSlide ? 1 : 0,
               transition: 'opacity 0.8s ease-in-out',
               zIndex: idx === activeSlide ? 1 : 0,
@@ -314,6 +337,12 @@ export default function Home() {
                       fontWeight: 600,
                       mb: 2,
                       lineHeight: 1.1,
+                      animation: isHeroLoading ? 'pulse 1.8s infinite ease-in-out' : 'none',
+                      '@keyframes pulse': {
+                        '0%': { opacity: 0.6 },
+                        '50%': { opacity: 1 },
+                        '100%': { opacity: 0.6 }
+                      }
                     }}
                   >
                     {slide.title}
@@ -475,7 +504,25 @@ export default function Home() {
           </Box>
 
           <Grid container spacing={4}>
-            {featuredPaintings.length === 0 ? (
+            {isHeroLoading ? (
+              Array.from(new Array(parseInt(featuredLimit, 10) || 3)).map((_, idx) => (
+                <Grid item xs={12} sm={6} md={4} key={idx}>
+                  <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                    <Skeleton variant="rectangular" height={400} sx={{ backgroundColor: 'rgba(0,0,0,0.04)' }} />
+                    <CardContent sx={{ flexGrow: 1, p: 3, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                      <Box>
+                        <Skeleton variant="text" width="70%" height={32} sx={{ mb: 1 }} />
+                        <Skeleton variant="text" width="50%" height={20} />
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}>
+                        <Skeleton variant="text" width="30%" height={28} />
+                        <Skeleton variant="rectangular" width={60} height={30} />
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))
+            ) : featuredPaintings.length === 0 ? (
               <Grid item xs={12}>
                 <Typography variant="body1" align="center" color="text.secondary">
                   No featured paintings found. Check back soon!
@@ -488,17 +535,19 @@ export default function Home() {
                     <CardMedia
                       component="img"
                       height="400"
-                      image={p.thumbnail_url || p.image_url || 'https://images.unsplash.com/photo-1579783928621-7a13d66a62d1?auto=format&fit=crop&w=600&q=80'}
+                      image={p.thumbnail_url || p.image_url || 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=600&q=80'}
                       alt={p.title}
                       sx={{ objectFit: 'cover' }}
                     />
-                    <CardContent sx={{ flexGrow: 1, p: 3 }}>
-                      <Typography variant="h5" component={RouterLink} to={`/painting/${p.slug}`} sx={{ textDecoration: 'none', color: 'primary.main', '&:hover': { color: 'secondary.main' } }}>
-                        {p.title}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>
-                        {p.medium} — {p.width}&times;{p.height} in
-                      </Typography>
+                    <CardContent sx={{ flexGrow: 1, p: 3, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                      <Box>
+                        <Typography variant="h5" component={RouterLink} to={`/painting/${p.slug}`} sx={{ textDecoration: 'none', color: 'primary.main', '&:hover': { color: 'secondary.main' } }}>
+                          {p.title}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>
+                          {p.medium} — {p.width}&times;{p.height} in
+                        </Typography>
+                      </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}>
                         <Typography variant="h6" color="primary" fontWeight="600">
                           {p.availability === 'SOLD' ? (

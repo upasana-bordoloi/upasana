@@ -17,6 +17,7 @@ import {
   TableRow,
   Dialog,
   DialogContent,
+  Skeleton,
 } from '@mui/material';
 import { ShoppingBagOutlined, ZoomInOutlined } from '@mui/icons-material';
 import { useCartStore } from '../store/store.js';
@@ -61,10 +62,46 @@ export default function PaintingDetail() {
 
   if (isLoading) {
     return (
-      <Container sx={{ py: 15, textDecoration: 'center' }}>
-        <Typography variant="h5" align="center" color="text.secondary">
-          Acquiring artwork details...
-        </Typography>
+      <Container maxWidth="lg" sx={{ py: 8 }}>
+        <Grid container spacing={8}>
+          {/* Left Side: Large interactive image & thumbnails skeleton */}
+          <Grid item xs={12} md={7}>
+            <Skeleton variant="rectangular" width="100%" height="65vh" sx={{ backgroundColor: 'rgba(0,0,0,0.04)', border: '1px solid #EBE6DF' }} />
+            <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+              <Skeleton variant="rectangular" width={80} height={80} sx={{ backgroundColor: 'rgba(0,0,0,0.04)' }} />
+              <Skeleton variant="rectangular" width={80} height={80} sx={{ backgroundColor: 'rgba(0,0,0,0.04)' }} />
+              <Skeleton variant="rectangular" width={80} height={80} sx={{ backgroundColor: 'rgba(0,0,0,0.04)' }} />
+            </Box>
+          </Grid>
+
+          {/* Right Side: Artwork specification & checkout skeleton */}
+          <Grid item xs={12} md={5}>
+            <Box>
+              <Skeleton variant="text" width="80%" height={48} sx={{ mb: 1 }} />
+              <Skeleton variant="text" width="40%" height={28} sx={{ mb: 3 }} />
+              <Skeleton variant="text" width="30%" height={36} sx={{ mb: 4 }} />
+              <Divider sx={{ mb: 4 }} />
+              <Skeleton variant="rectangular" width="100%" height={56} sx={{ mb: 4 }} />
+              <Skeleton variant="text" width="40%" height={32} sx={{ mb: 2 }} />
+              <Table size="small" sx={{ mb: 4 }}>
+                <TableBody>
+                  <TableRow>
+                    <TableCell sx={{ pl: 0, borderBottom: '1px solid #EBE6DF' }}><Skeleton variant="text" width="60%" /></TableCell>
+                    <TableCell sx={{ pr: 0, borderBottom: '1px solid #EBE6DF' }}><Skeleton variant="text" width="40%" sx={{ ml: 'auto' }} /></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell sx={{ pl: 0, borderBottom: '1px solid #EBE6DF' }}><Skeleton variant="text" width="50%" /></TableCell>
+                    <TableCell sx={{ pr: 0, borderBottom: '1px solid #EBE6DF' }}><Skeleton variant="text" width="60%" sx={{ ml: 'auto' }} /></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell sx={{ pl: 0, borderBottom: 'none' }}><Skeleton variant="text" width="40%" /></TableCell>
+                    <TableCell sx={{ pr: 0, borderBottom: 'none' }}><Skeleton variant="text" width="50%" sx={{ ml: 'auto' }} /></TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </Box>
+          </Grid>
+        </Grid>
       </Container>
     );
   }

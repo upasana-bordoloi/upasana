@@ -15,11 +15,17 @@ import {
   Chip,
   InputAdornment,
   Divider,
+  Skeleton,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import { SearchOutlined, FilterListOutlined } from '@mui/icons-material';
 import { formatPrice } from 'utils';
 
 export default function Gallery() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
   useEffect(() => {
     document.title = "Original Paintings Gallery | Upasana Bordoloi";
   }, []);
@@ -34,6 +40,7 @@ export default function Gallery() {
   const [sort, setSort] = useState('newest');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(6);
+  const [isFirstRender, setIsFirstRender] = useState(true);
 
   // Fetch settings for default page size limit
   const { data: settingsRes } = useQuery({
@@ -82,21 +89,34 @@ export default function Gallery() {
     setSearchParams({});
   };
 
+  // Scroll to top of content on page change (skip initial mount)
+  useEffect(() => {
+    if (isFirstRender) {
+      setIsFirstRender(false);
+      return;
+    }
+    const element = document.getElementById('gallery-content-start');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [page]);
+
   return (
-    <Container maxWidth="lg" sx={{ py: 8 }}>
+    <Container id="gallery-content-start" maxWidth="lg" sx={{ py: { xs: 3, md: 8 } }}>
       {/* Header */}
-      <Box sx={{ mb: 6, textAlign: 'center' }}>
-        <Typography variant="h2" sx={{ mb: 2 }}>The Art Collection</Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ maxWidth: '600px', mx: 'auto' }}>
+      <Box sx={{ mb: { xs: 3, md: 6 }, textAlign: 'center' }}>
+        <Typography variant="h2" sx={{ fontSize: { xs: '2rem', md: '3rem' }, mb: { xs: 1, md: 2 } }}>The Art Collection</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: '600px', mx: 'auto', fontSize: { xs: '0.85rem', md: '1rem' } }}>
           Browse original landscape paintings, minimalist abstracts, and heavy impasto textured works created in our studio.
         </Typography>
       </Box>
 
       {/* Controls & Search */}
-      <Grid container spacing={3} sx={{ mb: 6 }}>
+      <Grid container spacing={{ xs: 1.5, md: 3 }} sx={{ mb: { xs: 3, md: 6 } }}>
         <Grid item xs={12} sm={6} md={2.5}>
           <TextField
             fullWidth
+            size={isMobile ? "small" : "medium"}
             placeholder="Search paintings..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
@@ -113,6 +133,7 @@ export default function Gallery() {
           <TextField
             fullWidth
             select
+            size={isMobile ? "small" : "medium"}
             label="Medium"
             value={medium}
             onChange={(e) => { setMedium(e.target.value); setPage(1); }}
@@ -127,6 +148,7 @@ export default function Gallery() {
           <TextField
             fullWidth
             select
+            size={isMobile ? "small" : "medium"}
             label="Availability"
             value={availability}
             onChange={(e) => { setAvailability(e.target.value); setPage(1); }}
@@ -141,6 +163,7 @@ export default function Gallery() {
           <TextField
             fullWidth
             select
+            size={isMobile ? "small" : "medium"}
             label="Sort By"
             value={sort}
             onChange={(e) => setSort(e.target.value)}
@@ -156,6 +179,7 @@ export default function Gallery() {
           <TextField
             fullWidth
             select
+            size={isMobile ? "small" : "medium"}
             label="Per Page"
             value={limit}
             onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
@@ -167,19 +191,35 @@ export default function Gallery() {
           </TextField>
         </Grid>
         <Grid item xs={12} sm={6} md={1.5} sx={{ display: 'flex', alignItems: 'center' }}>
-          <Button variant="outlined" fullWidth onClick={handleResetFilters} sx={{ height: 56 }}>
+          <Button variant="outlined" fullWidth onClick={handleResetFilters} sx={{ height: { xs: 40, md: 56 } }}>
             Clear
           </Button>
         </Grid>
       </Grid>
 
-      <Divider sx={{ mb: 6 }} />
+      <Divider sx={{ mb: { xs: 3, md: 6 } }} />
 
       {/* Paintings Grid */}
       {isLoading ? (
-        <Typography variant="h6" align="center" color="text.secondary" sx={{ my: 10 }}>
-          Loading art archive...
-        </Typography>
+        <Grid container spacing={4}>
+          {Array.from(new Array(limit || 6)).map((_, index) => (
+            <Grid item xs={12} sm={6} md={4} key={index}>
+              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Skeleton variant="rectangular" height={380} sx={{ backgroundColor: 'rgba(0,0,0,0.04)' }} />
+                <CardContent sx={{ flexGrow: 1, p: 3, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <Box>
+                    <Skeleton variant="text" width="70%" height={32} sx={{ mb: 1 }} />
+                    <Skeleton variant="text" width="50%" height={20} />
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 4 }}>
+                    <Skeleton variant="text" width="30%" height={28} />
+                    <Skeleton variant="rectangular" width={60} height={30} />
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
       ) : paintings.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 10 }}>
           <Typography variant="h5" color="text.secondary" gutterBottom>No paintings found</Typography>

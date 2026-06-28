@@ -11,6 +11,7 @@ import {
   CardContent,
   Button,
   CircularProgress,
+  Skeleton,
 } from '@mui/material';
 
 export default function Collections() {
@@ -31,10 +32,23 @@ export default function Collections() {
       </Box>
 
       {isLoading ? (
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 10, gap: 2 }}>
-          <CircularProgress size={50} color="primary" />
-          <Typography variant="body2" color="text.secondary">Loading collections...</Typography>
-        </Box>
+        <Grid container spacing={4}>
+          {Array.from(new Array(3)).map((_, index) => (
+            <Grid item xs={12} md={4} key={index}>
+              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Skeleton variant="rectangular" height={320} sx={{ backgroundColor: 'rgba(0,0,0,0.04)' }} />
+                <CardContent sx={{ p: 4, flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <Box sx={{ mb: 3 }}>
+                    <Skeleton variant="text" width="60%" height={32} sx={{ mb: 1.5 }} />
+                    <Skeleton variant="text" width="90%" height={20} sx={{ mb: 1 }} />
+                    <Skeleton variant="text" width="80%" height={20} />
+                  </Box>
+                  <Skeleton variant="rectangular" width="100%" height={40} />
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
       ) : collections.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 10 }}>
           <Typography variant="body1" color="text.secondary">No collections found. Check back later!</Typography>
