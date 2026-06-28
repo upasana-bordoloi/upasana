@@ -87,6 +87,10 @@ const theme = createTheme({
         root: {
           borderRadius: 0, // Sharp square edges for luxury look
           padding: '12px 28px',
+          '@media (max-width:600px)': {
+            padding: '8px 16px',
+            fontSize: '0.75rem',
+          },
           transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
           '&:hover': {
             boxShadow: 'none',

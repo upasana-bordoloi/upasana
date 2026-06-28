@@ -111,8 +111,15 @@ export default function Overview() {
 
   return (
     <Box>
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 600 }}>
+      <Box sx={{
+        mb: 4,
+        display: 'flex',
+        flexDirection: { xs: 'column', sm: 'row' },
+        justifyContent: 'space-between',
+        alignItems: { xs: 'stretch', sm: 'center' },
+        gap: 2
+      }}>
+        <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 600, fontSize: { xs: '1.8rem', md: '2.125rem' } }}>
           Dashboard Overview
         </Typography>
         <Button
@@ -135,7 +142,7 @@ export default function Overview() {
                   <Typography variant="body2" color="text.secondary" fontWeight="500">
                     {s.text}
                   </Typography>
-                  <Typography variant="h4" sx={{ mt: 1, fontWeight: 700 }}>
+                  <Typography variant="h4" sx={{ mt: 1, fontWeight: 700, fontSize: { xs: '1.5rem', md: '2.125rem' } }}>
                     {s.count}
                   </Typography>
                 </Box>
@@ -177,7 +184,13 @@ export default function Overview() {
               Staff Activity Logs
             </Typography>
 
-            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Box sx={{
+              display: 'flex',
+              gap: 2,
+              mb: 3,
+              flexDirection: { xs: 'column', sm: 'row' },
+              alignItems: { xs: 'stretch', sm: 'center' }
+            }}>
               <TextField
                 label="Start Date"
                 type="date"
@@ -185,6 +198,7 @@ export default function Overview() {
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 size="small"
+                sx={{ width: { xs: '100%', sm: '180px' } }}
               />
               <TextField
                 label="End Date"
@@ -193,8 +207,17 @@ export default function Overview() {
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 size="small"
+                sx={{ width: { xs: '100%', sm: '180px' } }}
               />
-              <Button variant="contained" onClick={handleFetchLogs} size="medium">
+              <Button
+                variant="contained"
+                onClick={handleFetchLogs}
+                size="medium"
+                sx={{
+                  height: 40,
+                  width: { xs: '100%', sm: 'auto' }
+                }}
+              >
                 Fetch Logs
               </Button>
             </Box>

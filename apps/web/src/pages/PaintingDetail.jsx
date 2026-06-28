@@ -49,6 +49,11 @@ export default function PaintingDetail() {
     }
   }, [p]);
 
+  // Scroll to top on slug change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [slug]);
+
   // Set SEO Meta Title and Description dynamically
   useEffect(() => {
     if (p.title) {

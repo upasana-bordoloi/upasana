@@ -361,13 +361,33 @@ export default function Home() {
                   >
                     {slide.story ? slide.story.substring(0, 160) + '...' : (settings.hero_subtitle || 'Exploring light, nature, and raw human emotion.')}
                   </Typography>
-                  <Box sx={{ display: 'flex', gap: 2 }}>
+                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                     {slide.slug ? (
-                      <Button variant="contained" color="secondary" component={RouterLink} to={`/painting/${slide.slug}`} size="large">
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        component={RouterLink}
+                        to={`/painting/${slide.slug}`}
+                        sx={{
+                          py: { xs: 1, md: 1.5 },
+                          px: { xs: 2.5, md: 3.5 },
+                          fontSize: { xs: '0.75rem', md: '0.875rem' }
+                        }}
+                      >
                         View Painting Details
                       </Button>
                     ) : (
-                      <Button variant="contained" color="secondary" component={RouterLink} to="/gallery" size="large">
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        component={RouterLink}
+                        to="/gallery"
+                        sx={{
+                          py: { xs: 1, md: 1.5 },
+                          px: { xs: 2.5, md: 3.5 },
+                          fontSize: { xs: '0.75rem', md: '0.875rem' }
+                        }}
+                      >
                         Explore Gallery
                       </Button>
                     )}
@@ -375,10 +395,12 @@ export default function Home() {
                       variant="outlined"
                       component={RouterLink}
                       to="/about"
-                      size="large"
                       sx={{
                         color: '#FAF8F5',
                         borderColor: '#FAF8F5',
+                        py: { xs: 1, md: 1.5 },
+                        px: { xs: 2.5, md: 3.5 },
+                        fontSize: { xs: '0.75rem', md: '0.875rem' },
                         '&:hover': {
                           borderColor: 'secondary.main',
                           color: 'secondary.main'
@@ -656,7 +678,7 @@ export default function Home() {
       {/* Contact CTA */}
       <Box sx={{ backgroundColor: '#2E2E2E', color: '#FAF8F5', py: 10, textAlign: 'center' }}>
         <Container maxWidth="md">
-          <Typography variant="h3" sx={{ mb: 3 }}>
+          <Typography variant="h3" sx={{ mb: 3, fontSize: { xs: '1.8rem', md: '3rem' } }}>
             Acquire An Original Masterpiece
           </Typography>
           <Typography variant="body1" sx={{ color: '#C8C4BE', mb: 5, maxWidth: '600px', mx: 'auto' }}>

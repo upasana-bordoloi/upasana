@@ -106,9 +106,6 @@ export default function Gallery() {
       {/* Header */}
       <Box sx={{ mb: { xs: 3, md: 6 }, textAlign: 'center' }}>
         <Typography variant="h2" sx={{ fontSize: { xs: '2rem', md: '3rem' }, mb: { xs: 1, md: 2 } }}>The Art Collection</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: '600px', mx: 'auto', fontSize: { xs: '0.85rem', md: '1rem' } }}>
-          Browse original landscape paintings, minimalist abstracts, and heavy impasto textured works created in our studio.
-        </Typography>
       </Box>
 
       {/* Controls & Search */}
